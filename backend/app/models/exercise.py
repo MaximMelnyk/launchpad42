@@ -1,15 +1,11 @@
 """Exercise and progress models for Firestore."""
 
-from datetime import datetime, timezone
+from datetime import datetime
 from enum import Enum
 
 from pydantic import Field
 
-from app.models import CamelModel
-
-
-def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+from app.models import CamelModel, utcnow
 
 
 class ExerciseStatus(str, Enum):
@@ -52,7 +48,7 @@ class ExerciseProgress(CamelModel):
     first_attempt_pass: bool = False
     started_at: datetime | None = None
     completed_at: datetime | None = None
-    updated_at: datetime = Field(default_factory=_utcnow)
+    updated_at: datetime = Field(default_factory=utcnow)
 
 
 class ExerciseSubmission(CamelModel):

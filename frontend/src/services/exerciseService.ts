@@ -11,6 +11,7 @@ export interface TodayResponse {
   reviewCards: ReviewCard[];
   drill: DrillPool | null;
   currentDay: number;
+  phase: string;
 }
 
 /** Response shape from GET /curriculum/exercises/{id} */
@@ -41,4 +42,8 @@ export function submitExercise(
   data: ExerciseSubmission
 ): Promise<SubmitExerciseResponse> {
   return api.post<SubmitExerciseResponse>(`/curriculum/exercises/${id}/submit`, data);
+}
+
+export function getPhaseExercises(phase: string): Promise<ExerciseDetailResponse[]> {
+  return api.get<ExerciseDetailResponse[]>(`/curriculum/phase/${phase}`);
 }

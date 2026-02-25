@@ -14,6 +14,7 @@ from telegram.ext import (
 )
 
 from app.core.config import settings
+from app.core.utils import is_date_in_range
 from app.models.gamification import (
     LEVEL_NAMES,
     LEVEL_XP_THRESHOLDS,
@@ -552,7 +553,7 @@ async def mother_streak(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     monday = today - timedelta(days=today.weekday())
     week_count = sum(
         1 for d_str in weekly_days
-        if _is_date_in_range(d_str, monday, today)
+        if is_date_in_range(d_str, monday, today)
     )
 
     streak = u.get("streak_days", 0)
@@ -715,15 +716,6 @@ async def send_student_preview(db: AsyncClient) -> None:
         bot = Bot(settings.telegram_bot_token)
         await bot.send_message(chat_id=chat_id, text=preview_text)
         logger.info("Student preview sent", chat_id=chat_id)
-
-
-def _is_date_in_range(d_str: str, start: date, end: date) -> bool:
-    """Check if date string falls within range (inclusive)."""
-    try:
-        d = date.fromisoformat(d_str)
-        return start <= d <= end
-    except ValueError:
-        return False
 
 
 # --- Bot Setup ---

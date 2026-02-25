@@ -5,8 +5,8 @@ from unittest.mock import patch
 
 import pytest
 
+from app.services.curriculum_service import get_current_day
 from app.services.session_service import (
-    get_current_day,
     get_current_session,
     start_session,
     validate_date_string,
@@ -43,7 +43,7 @@ class TestGetCurrentDay:
 
     def test_specific_date(self):
         """Test with a known date pair."""
-        with patch("app.services.session_service.date") as mock_date:
+        with patch("app.services.curriculum_service.date") as mock_date:
             mock_date.today.return_value = date(2026, 3, 7)
             mock_date.fromisoformat = date.fromisoformat
             result = get_current_day("2026-02-26")

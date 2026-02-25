@@ -1,11 +1,11 @@
 """Gamification models: levels, achievements, XP, streaks, SRS, exams."""
 
-from datetime import datetime, timezone
+from datetime import datetime
 from enum import Enum
 
 from pydantic import Field
 
-from app.models import CamelModel
+from app.models import CamelModel, utcnow
 
 
 # --- Level System ---
@@ -88,9 +88,6 @@ class Achievement(CamelModel):
 
 # --- Drill & Review ---
 
-def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
-
 
 class DrillPool(CamelModel):
     """Drill rotation pool. Firestore: drill_pool/{uid}"""
@@ -98,7 +95,7 @@ class DrillPool(CamelModel):
     uid: str
     function_queue: list[str] = Field(default_factory=list)  # exercise IDs to drill
     last_drilled: dict[str, str] = Field(default_factory=dict)  # exercise_id -> date
-    updated_at: datetime = Field(default_factory=_utcnow)
+    updated_at: datetime = Field(default_factory=utcnow)
 
 
 class ReviewCard(CamelModel):
@@ -175,4 +172,4 @@ class TelegramLink(CamelModel):
     chat_id: int
     role: TelegramRole
     display_name: str = ""
-    linked_at: datetime = Field(default_factory=_utcnow)
+    linked_at: datetime = Field(default_factory=utcnow)

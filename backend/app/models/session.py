@@ -1,15 +1,11 @@
 """Daily session model for Firestore."""
 
 import re
-from datetime import datetime, timezone
+from datetime import datetime
 
 from pydantic import Field, field_validator
 
-from app.models import CamelModel
-
-
-def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+from app.models import CamelModel, utcnow
 
 
 class Session(CamelModel):
@@ -27,7 +23,7 @@ class Session(CamelModel):
     duration_minutes: int = Field(default=0, ge=0)
     started_at: datetime | None = None
     finished_at: datetime | None = None
-    created_at: datetime = Field(default_factory=_utcnow)
+    created_at: datetime = Field(default_factory=utcnow)
 
     @field_validator("date")
     @classmethod

@@ -134,6 +134,7 @@ export type AchievementId =
 export interface Achievement {
   uid: string;
   achievementId: AchievementId;
+  nameUk?: string;
   unlocked: boolean;
   unlockedAt: string | null;
   progress: number;
@@ -209,6 +210,29 @@ export interface Exam {
   startedAt: string | null;
   finishedAt: string | null;
   attemptNumber: number;
+  timeRemainingMinutes?: number;
+}
+
+// --- Gamification Profile (aggregated from backend) ---
+
+export interface GamificationProfile {
+  level: number;
+  levelName: string;
+  xp: number;
+  nextLevelXp: number;
+  xpToNext: number;
+  streakDays: number;
+  shields: number;
+  phase: string;
+  weeklyProgress: string;
+}
+
+// --- Exam Submit Response ---
+
+export interface ExamSubmitResponse {
+  correct: boolean;
+  score: number;
+  completed: boolean;
 }
 
 // --- Telegram ---
@@ -235,21 +259,3 @@ export interface TutorResponse {
   tokensUsed?: number | null;
 }
 
-// --- API Response wrappers ---
-
-export interface ApiResponse<T> {
-  data: T;
-  message?: string;
-}
-
-export interface DashboardData {
-  user: UserProfile;
-  todaySession: Session | null;
-  todayExercises: Exercise[];
-  recentAchievements: Achievement[];
-  streakInfo: {
-    current: number;
-    shields: number;
-    weeklyProgress: number;
-  };
-}

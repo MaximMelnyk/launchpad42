@@ -1,12 +1,15 @@
 """Shared base model with camelCase alias generation for frontend contract."""
 
+from datetime import datetime, timezone
+
 from pydantic import BaseModel, ConfigDict
 
+from app.core.utils import to_camel
 
-def to_camel(string: str) -> str:
-    """Convert snake_case to camelCase."""
-    components = string.split("_")
-    return components[0] + "".join(x.title() for x in components[1:])
+
+def utcnow() -> datetime:
+    """Return current UTC datetime (timezone-aware). Shared default factory."""
+    return datetime.now(timezone.utc)
 
 
 class CamelModel(BaseModel):

@@ -5,24 +5,10 @@ from datetime import date, datetime, timezone
 import structlog
 from google.cloud.firestore_v1 import AsyncClient
 
-from app.core.config import settings
 from app.models.session import Session
+from app.services.curriculum_service import get_current_day
 
 logger = structlog.get_logger()
-
-
-def get_current_day(day1_date: str | None = None) -> int:
-    """Calculate current training day from day1_date config.
-
-    Returns 1-based day number. Day 1 = day1_date itself.
-    Uses datetime.strptime for validation (fixes deferred P2 issue).
-    """
-    d1_str = day1_date or settings.day1_date
-    # Validate with strptime (not just regex)
-    d1 = datetime.strptime(d1_str, "%Y-%m-%d").date()
-    today = date.today()
-    delta = (today - d1).days
-    return max(1, delta + 1)
 
 
 def validate_date_string(date_str: str) -> date:

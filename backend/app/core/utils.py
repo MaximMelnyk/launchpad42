@@ -1,5 +1,7 @@
 """Shared utility helpers for the 42 LaunchPad backend."""
 
+from datetime import date
+
 # Keys whose dict values are identifier maps (exercise_id -> value),
 # not field-name maps. Their sub-keys must NOT be camelCase-converted.
 _IDENTITY_MAP_KEYS = frozenset({"last_drilled", "lastDrilled"})
@@ -30,3 +32,12 @@ def camel_dict(d: dict) -> dict:
         else:
             result[new_key] = v
     return result
+
+
+def is_date_in_range(d_str: str, start: date, end: date) -> bool:
+    """Check if date string (YYYY-MM-DD) falls within range (inclusive)."""
+    try:
+        d = date.fromisoformat(d_str)
+        return start <= d <= end
+    except ValueError:
+        return False

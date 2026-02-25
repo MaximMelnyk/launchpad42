@@ -1,14 +1,10 @@
 """User profile model for Firestore."""
 
-from datetime import datetime, timezone
+from datetime import datetime
 
 from pydantic import Field
 
-from app.models import CamelModel
-
-
-def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+from app.models import CamelModel, utcnow
 
 
 class UserProfile(CamelModel):
@@ -28,8 +24,8 @@ class UserProfile(CamelModel):
     pause_started_at: datetime | None = None
     telegram_chat_id: int | None = None
     mood_today: str | None = None
-    created_at: datetime = Field(default_factory=_utcnow)
-    updated_at: datetime = Field(default_factory=_utcnow)
+    created_at: datetime = Field(default_factory=utcnow)
+    updated_at: datetime = Field(default_factory=utcnow)
 
 
 class UserProfileUpdate(CamelModel):

@@ -6,6 +6,7 @@ import structlog
 from google.cloud.firestore_v1 import AsyncClient
 from google.cloud.firestore_v1.base_query import FieldFilter
 
+from app.core.utils import is_date_in_range
 from app.models.gamification import (
     ACHIEVEMENT_NAMES_UK,
     LEVEL_NAMES,
@@ -387,7 +388,7 @@ async def get_gamification_profile(uid: str, db: AsyncClient) -> dict:
     week_count = sum(
         1
         for d_str in weekly_days
-        if _is_date_in_range(d_str, monday, today)
+        if is_date_in_range(d_str, monday, today)
     )
 
     return {
@@ -401,15 +402,6 @@ async def get_gamification_profile(uid: str, db: AsyncClient) -> dict:
         "phase": user_data.get("phase", "phase0"),
         "weekly_progress": f"{week_count}/7",
     }
-
-
-def _is_date_in_range(d_str: str, start: date, end: date) -> bool:
-    """Check if date string falls within range (inclusive)."""
-    try:
-        d = date.fromisoformat(d_str)
-        return start <= d <= end
-    except ValueError:
-        return False
 
 
 async def process_drill(
