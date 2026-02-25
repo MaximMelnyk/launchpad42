@@ -254,7 +254,8 @@ async def check_achievements(uid: str, db: AsyncClient) -> list[str]:
         )
     )
 
-    # Process checks
+    # Process checks — accumulate XP bonus for all newly unlocked achievements
+    total_xp_bonus = 0
     for ach_id, condition_met, progress, target in checks:
         if existing.get(ach_id.value, False):
             continue  # Already unlocked
@@ -266,18 +267,12 @@ async def check_achievements(uid: str, db: AsyncClient) -> list[str]:
             "progress": progress,
             "target": target,
             "unlocked": condition_met,
+            "unlocked_at": now if condition_met else None,
         }
 
         if condition_met:
-            ach_data["unlocked_at"] = now
             newly_unlocked.append(ach_id.value)
-
-            # Award bonus XP for unlocking
-            user_xp = user_data.get("xp", 0)
-            await db.collection("users").document(uid).set(
-                {"xp": user_xp + XP_BONUS_ACHIEVEMENT, "updated_at": now},
-                merge=True,
-            )
+            total_xp_bonus += XP_BONUS_ACHIEVEMENT
             logger.info(
                 "Achievement unlocked",
                 uid=uid,
@@ -287,6 +282,14 @@ async def check_achievements(uid: str, db: AsyncClient) -> list[str]:
 
         await db.collection("achievements").document(doc_id).set(
             ach_data, merge=True
+        )
+
+    # Award accumulated XP bonus in a single write
+    if total_xp_bonus > 0:
+        user_xp = user_data.get("xp", 0)
+        await db.collection("users").document(uid).set(
+            {"xp": user_xp + total_xp_bonus, "updated_at": now},
+            merge=True,
         )
 
     return newly_unlocked
@@ -587,6 +590,7 @@ async def get_achievements(uid: str, db: AsyncClient) -> list[dict]:
         if doc.exists:
             data = doc.to_dict()
             data["name_uk"] = ACHIEVEMENT_NAMES_UK.get(ach_id.value, ach_id.value)
+            data.setdefault("unlocked_at", None)
             achievements.append(data)
         else:
             achievements.append(
@@ -595,6 +599,7 @@ async def get_achievements(uid: str, db: AsyncClient) -> list[dict]:
                     "achievement_id": ach_id.value,
                     "name_uk": ACHIEVEMENT_NAMES_UK.get(ach_id.value, ach_id.value),
                     "unlocked": False,
+                    "unlocked_at": None,
                     "progress": 0,
                     "target": 1,
                 }

@@ -65,6 +65,12 @@ async def check_cooldown(
 
     Return {can_start, reason, next_available}
     """
+    # Validate exam type
+    try:
+        ExamType(exam_type)
+    except ValueError:
+        raise ValueError(f"Invalid exam type: {exam_type}. Use 'gate' or 'final'.")
+
     now = datetime.now(timezone.utc)
     cutoff_14d = now - timedelta(days=ATTEMPT_PERIOD_DAYS)
 

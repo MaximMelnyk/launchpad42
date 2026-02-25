@@ -90,5 +90,11 @@ async def check_cooldown(
     db: AsyncClient = Depends(get_db),
 ) -> dict:
     """Check cooldown status for an exam type."""
-    result = await exam_service.check_cooldown(uid, exam_type, db)
-    return camel_dict(result)
+    try:
+        result = await exam_service.check_cooldown(uid, exam_type, db)
+        return camel_dict(result)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
