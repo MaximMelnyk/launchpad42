@@ -61,7 +61,12 @@ async def verify_drill(
     uid: str = Depends(get_uid),
     db: AsyncClient = Depends(get_db),
 ) -> dict:
-    """Verify drill attempt. Returns {correct, xpEarned}."""
+    """Verify drill attempt.
+
+    Returns {correct, xpEarned}.
+    If already drilled today: {correct: true, xpEarned: 0, alreadyDrilled: true}.
+    If function not in queue: {correct: false, xpEarned: 0, error: "..."}.
+    """
     result = await gamification_service.process_drill(
         uid, data.function_name, data.time_seconds, db
     )
@@ -74,7 +79,11 @@ async def submit_review(
     uid: str = Depends(get_uid),
     db: AsyncClient = Depends(get_db),
 ) -> dict:
-    """Submit review card answer. Returns {nextReview, intervalDays, xpEarned}."""
+    """Submit review card answer.
+
+    Returns {nextReview, intervalDays, xpEarned}.
+    If already reviewed today: {alreadyReviewed: true, intervalDays, xpEarned: 0}.
+    """
     try:
         result = await gamification_service.process_review(
             uid, data.card_id, data.correct, db

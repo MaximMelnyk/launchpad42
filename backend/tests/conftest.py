@@ -82,8 +82,8 @@ class MockDocumentRef:
             self._collection[self._id] = data
 
     async def update(self, data: dict):
-        """Update fields in existing document. Handles Increment sentinels."""
-        from google.cloud.firestore_v1.transforms import _NumericValue
+        """Update fields in existing document. Handles Increment and ArrayUnion sentinels."""
+        from google.cloud.firestore_v1.transforms import _NumericValue, _ValueList
 
         if self._id not in self._collection:
             raise ValueError(f"Document {self._id} does not exist")
@@ -92,6 +92,13 @@ class MockDocumentRef:
                 # Handle Increment/Minimum/Maximum sentinels
                 current = self._collection[self._id].get(key, 0)
                 self._collection[self._id][key] = current + value.value
+            elif isinstance(value, _ValueList):
+                # Handle ArrayUnion/ArrayRemove sentinels
+                current = self._collection[self._id].get(key, [])
+                for item in value.values:
+                    if item not in current:
+                        current.append(item)
+                self._collection[self._id][key] = current
             else:
                 self._collection[self._id][key] = value
 

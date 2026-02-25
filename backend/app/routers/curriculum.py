@@ -87,7 +87,11 @@ async def submit_exercise(
     uid: str = Depends(get_uid),
     db: AsyncClient = Depends(get_db),
 ) -> dict:
-    """Submit exercise completion. Returns {xpEarned, bonuses, levelUp, achievementsUnlocked}."""
+    """Submit exercise completion.
+
+    Returns {xpEarned, bonuses, levelUp, achievementsUnlocked}.
+    If already completed: {xpEarned: 0, alreadyCompleted: true}.
+    """
     try:
         result = await exercise_service.submit_exercise(
             uid, exercise_id, submission, db

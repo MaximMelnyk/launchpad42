@@ -6,35 +6,24 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
-    // User profile: owner can read freely, write restricted to safe fields
+    // User profile: client read-only (all writes via backend Admin SDK)
     match /users/{uid} {
       allow read: if request.auth != null && request.auth.uid == uid;
-      allow create: if request.auth != null && request.auth.uid == uid;
-      allow update: if request.auth != null && request.auth.uid == uid
-        && (!request.resource.data.diff(resource.data).affectedKeys()
-            .hasAny(['level', 'xp', 'streak_days', 'shields', 'current_day', 'phase', 'weekly_completed_days', 'telegram_chat_id']));
+      allow write: if false;
     }
 
-    // Exercise progress: uid-scoped via field check
+    // Exercise progress: client read-only (writes via backend Admin SDK)
     match /exercise_progress/{docId} {
       allow read: if request.auth != null
         && resource.data.uid == request.auth.uid;
-      allow create: if request.auth != null
-        && request.resource.data.uid == request.auth.uid;
-      allow update: if request.auth != null
-        && resource.data.uid == request.auth.uid
-        && request.resource.data.uid == request.auth.uid;
+      allow write: if false;
     }
 
-    // Sessions: uid-scoped via field check
+    // Sessions: client read-only (writes via backend Admin SDK)
     match /sessions/{docId} {
       allow read: if request.auth != null
         && resource.data.uid == request.auth.uid;
-      allow create: if request.auth != null
-        && request.resource.data.uid == request.auth.uid;
-      allow update: if request.auth != null
-        && resource.data.uid == request.auth.uid
-        && request.resource.data.uid == request.auth.uid;
+      allow write: if false;
     }
 
     // Exercises: read-only for authenticated users (seeded by admin/server)

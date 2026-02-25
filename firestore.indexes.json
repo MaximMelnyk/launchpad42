@@ -41,22 +41,6 @@
         { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "exam_type", "order": "ASCENDING" }
       ]
-    },
-    {
-      "collectionGroup": "sessions",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "uid", "order": "ASCENDING" },
-        { "fieldPath": "date", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "review_cards",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "phase", "order": "ASCENDING" },
-        { "fieldPath": "next_review", "order": "ASCENDING" }
-      ]
     }
   ],
   "fieldOverrides": []

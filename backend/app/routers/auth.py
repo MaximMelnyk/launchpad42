@@ -9,6 +9,7 @@ from google.cloud.firestore_v1 import AsyncClient
 from app.core.auth import get_uid
 from app.core.firebase import get_db
 from app.models.user import UserProfile, UserProfileUpdate
+from app.services.curriculum_service import get_current_day, get_phase_for_day
 
 logger = structlog.get_logger()
 router = APIRouter()
@@ -21,15 +22,33 @@ async def get_profile(
 ) -> UserProfile:
     """Get current user profile."""
     doc = await db.collection("users").document(uid).get()
+
+    # Compute authoritative phase/current_day from day1_date
+    computed_day = get_current_day()
+    computed_phase = get_phase_for_day(computed_day)
+
     if not doc.exists:
-        # Auto-create profile for new user
-        profile = UserProfile(uid=uid)
+        # Auto-create profile for new user with computed values
+        profile = UserProfile(
+            uid=uid, phase=computed_phase, current_day=computed_day,
+        )
         await db.collection("users").document(uid).set(profile.model_dump())
         logger.info("Auto-created user profile", uid=uid)
         return profile
 
     data = doc.to_dict()
     data["uid"] = uid
+
+    # Sync stale phase/current_day from profile with computed values
+    if data.get("phase") != computed_phase or data.get("current_day") != computed_day:
+        data["phase"] = computed_phase
+        data["current_day"] = computed_day
+        await db.collection("users").document(uid).set(
+            {"phase": computed_phase, "current_day": computed_day,
+             "updated_at": datetime.now(timezone.utc)},
+            merge=True,
+        )
+
     return UserProfile(**data)
 
 
@@ -47,8 +66,8 @@ async def update_profile(
             detail="User profile not found",
         )
 
-    # Only update non-None fields
-    update_data = data.model_dump(exclude_none=True)
+    # Only update explicitly provided fields (exclude_unset allows sending null to clear)
+    update_data = data.model_dump(exclude_unset=True)
     if not update_data:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

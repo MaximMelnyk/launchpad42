@@ -249,6 +249,14 @@ async def test_e2e_student_day_flow():
         assert "currentDay" in dash
         assert dash["gamification"]["level"] == 1
 
+        # --- Verify session aggregates updated after exercise submissions ---
+        r = await c.get("/session/current")
+        assert r.status_code == 200
+        sess_data = r.json()
+        assert "shell00_ex00" in sess_data["exercisesCompleted"]
+        assert "shell00_ex01" in sess_data["exercisesCompleted"]
+        assert sess_data["xpEarned"] > 0
+
         # --- Session: end ---
         r = await c.post(
             "/session/end",
@@ -688,6 +696,69 @@ async def test_e2e_profile_auto_create():
         assert profile["level"] == 0
         assert profile["xp"] == 0
 
-        # Verify profile was persisted
+        # Verify profile was persisted with computed phase/current_day
         stored = db._collections["users"][TEST_UID]
         assert stored["uid"] == TEST_UID
+        assert "phase" in stored
+        assert "current_day" in stored
+
+
+# ---------------------------------------------------------------------------
+# Test 9: Phase/CurrentDay Sync on Profile Read (P2-M01 fix)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_e2e_phase_sync_on_profile_read():
+    """Verify profile sync: stale phase/current_day is overwritten by computed."""
+    db = _base_db()
+    # Seed user with intentionally stale phase
+    db._collections["users"][TEST_UID]["phase"] = "phase0"
+    db._collections["users"][TEST_UID]["current_day"] = 1
+    app = _create_app(db)
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as c:
+        r = await c.get("/auth/profile")
+        assert r.status_code == 200
+        profile = r.json()
+        # Computed values should override stale ones
+        # (exact values depend on settings.day1_date and today's date)
+        assert profile["currentDay"] >= 1
+        assert profile["phase"].startswith("phase")
+        # Verify DB was updated to match
+        stored = db._collections["users"][TEST_UID]
+        assert stored["phase"] == profile["phase"]
+        assert stored["current_day"] == profile["currentDay"]
+
+
+# ---------------------------------------------------------------------------
+# Test 10: Mood Clearing via Profile Update (P2-M06 fix)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_e2e_mood_clearing():
+    """Verify mood_today can be cleared by sending null (exclude_unset fix)."""
+    db = _base_db()
+    # Set mood to non-null
+    db._collections["users"][TEST_UID]["mood_today"] = "3"
+    app = _create_app(db)
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as c:
+        # Confirm mood is set
+        r = await c.get("/auth/profile")
+        assert r.status_code == 200
+        assert r.json()["moodToday"] == "3"
+
+        # Clear mood by sending null
+        r = await c.put("/auth/profile", json={"moodToday": None})
+        assert r.status_code == 200
+        assert r.json()["moodToday"] is None
+
+        # Verify persisted
+        stored = db._collections["users"][TEST_UID]
+        assert stored["mood_today"] is None

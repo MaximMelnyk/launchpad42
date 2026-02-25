@@ -1,10 +1,11 @@
 """Exercise service — submission, XP calculation, hash verification, progress."""
 
 import re
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 import structlog
 from google.cloud.firestore_v1 import AsyncClient, Increment
+from google.cloud.firestore_v1 import ArrayUnion
 
 from app.models.exercise import (
     Exercise,
@@ -194,6 +195,24 @@ async def submit_exercise(
         )
     except Exception:
         raise ValueError(f"User not found: {uid}")
+
+    # Update current session aggregates (exercises_completed + xp_earned)
+    today_str = date.today().isoformat()
+    session_doc_id = f"{uid}_{today_str}"
+    try:
+        await db.collection("sessions").document(session_doc_id).update(
+            {
+                "exercises_completed": ArrayUnion([exercise_id]),
+                "xp_earned": Increment(xp_earned),
+            }
+        )
+    except Exception:
+        # Session may not exist (exercise submitted outside session flow)
+        logger.warning(
+            "Could not update session aggregates",
+            uid=uid,
+            session_id=session_doc_id,
+        )
 
     # Check level up (import here to avoid circular imports)
     from app.services.gamification_service import check_achievements, check_level_up
