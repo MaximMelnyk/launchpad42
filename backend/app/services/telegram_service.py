@@ -463,6 +463,10 @@ async def _handle_mood_callback(
     if db is None:
         return
 
+    # P2: Verify chat is linked (callback can come from any chat)
+    if not await _require_linked(update, db):
+        return
+
     query = update.callback_query
     await query.answer()
 
