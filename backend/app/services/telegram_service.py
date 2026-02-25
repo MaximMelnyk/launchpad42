@@ -665,18 +665,19 @@ async def _generate_weekly_report(uid: str, db: AsyncClient) -> str:
 
 
 async def send_weekly_report(db: AsyncClient) -> None:
-    """Sunday 19:00 auto-report to mother."""
-    # Find mother chat
+    """Sunday 19:00 auto-report to all observers (mother role)."""
+    # Find all observer chats
     query = db.collection("telegram_links").where(
         filter=FieldFilter("role", "==", TelegramRole.MOTHER.value)
     )
-    mother_chat_id: int | None = None
+    observer_chat_ids: list[int] = []
     async for doc in query.stream():
-        mother_chat_id = doc.to_dict().get("chat_id")
-        break
+        chat_id = doc.to_dict().get("chat_id")
+        if chat_id:
+            observer_chat_ids.append(chat_id)
 
-    if not mother_chat_id:
-        logger.warning("No mother chat linked for weekly report")
+    if not observer_chat_ids:
+        logger.warning("No observer chats linked for weekly report")
         return
 
     uid = await _get_student_uid(db)
@@ -686,12 +687,16 @@ async def send_weekly_report(db: AsyncClient) -> None:
 
     report = await _generate_weekly_report(uid, db)
 
-    # Send via bot API
+    # Send to all observers
     from telegram import Bot
     if settings.telegram_bot_token:
         bot = Bot(settings.telegram_bot_token)
-        await bot.send_message(chat_id=mother_chat_id, text=report)
-        logger.info("Weekly report sent to mother", chat_id=mother_chat_id)
+        for chat_id in observer_chat_ids:
+            try:
+                await bot.send_message(chat_id=chat_id, text=report)
+                logger.info("Weekly report sent", chat_id=chat_id)
+            except Exception:
+                logger.exception("Failed to send weekly report", chat_id=chat_id)
 
 
 async def send_student_preview(db: AsyncClient) -> None:
