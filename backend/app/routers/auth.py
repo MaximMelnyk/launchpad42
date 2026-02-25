@@ -43,11 +43,14 @@ async def get_profile(
     if data.get("phase") != computed_phase or data.get("current_day") != computed_day:
         data["phase"] = computed_phase
         data["current_day"] = computed_day
-        await db.collection("users").document(uid).set(
-            {"phase": computed_phase, "current_day": computed_day,
-             "updated_at": datetime.now(timezone.utc)},
-            merge=True,
-        )
+        try:
+            await db.collection("users").document(uid).set(
+                {"phase": computed_phase, "current_day": computed_day,
+                 "updated_at": datetime.now(timezone.utc)},
+                merge=True,
+            )
+        except Exception:
+            logger.warning("Failed to sync phase/current_day", uid=uid)
 
     return UserProfile(**data)
 
@@ -68,6 +71,11 @@ async def update_profile(
 
     # Only update explicitly provided fields (exclude_unset allows sending null to clear)
     update_data = data.model_dump(exclude_unset=True)
+
+    # Strip None for non-nullable fields (pause_mode is bool, not bool|None)
+    if "pause_mode" in update_data and update_data["pause_mode"] is None:
+        del update_data["pause_mode"]
+
     if not update_data:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

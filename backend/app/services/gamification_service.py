@@ -438,12 +438,12 @@ async def process_drill(
     # P1-5: Check if function was already drilled today
     last_drilled = drill_data.get("last_drilled", {})
     if last_drilled.get(function_name) == today_str:
-            logger.info(
-                "Drill already completed today, no XP awarded",
-                uid=uid,
-                function=function_name,
-            )
-            return {"correct": True, "xp_earned": 0, "already_drilled": True}
+        logger.info(
+            "Drill already completed today, no XP awarded",
+            uid=uid,
+            function=function_name,
+        )
+        return {"correct": True, "xp_earned": 0, "already_drilled": True}
 
     # Fetch exercise for estimated time
     ex_doc = await db.collection("exercises").document(function_name).get()

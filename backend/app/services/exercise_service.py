@@ -4,8 +4,7 @@ import re
 from datetime import date, datetime, timezone
 
 import structlog
-from google.cloud.firestore_v1 import AsyncClient, Increment
-from google.cloud.firestore_v1 import ArrayUnion
+from google.cloud.firestore_v1 import ArrayUnion, AsyncClient, Increment
 
 from app.models.exercise import (
     Exercise,

@@ -762,3 +762,18 @@ async def test_e2e_mood_clearing():
         # Verify persisted
         stored = db._collections["users"][TEST_UID]
         assert stored["mood_today"] is None
+
+        # Sending pauseMode=null should be stripped (non-nullable field guard)
+        r = await c.put("/auth/profile", json={"pauseMode": None})
+        # Only pauseMode was sent and it's null -> stripped -> no fields -> 400
+        assert r.status_code == 400
+
+        # Sending pauseMode=null alongside a valid field should work
+        r = await c.put(
+            "/auth/profile",
+            json={"moodToday": "5", "pauseMode": None},
+        )
+        assert r.status_code == 200
+        assert r.json()["moodToday"] == "5"
+        # pause_mode unchanged (still False from default)
+        assert r.json()["pauseMode"] is False

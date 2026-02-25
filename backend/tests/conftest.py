@@ -93,7 +93,7 @@ class MockDocumentRef:
                 current = self._collection[self._id].get(key, 0)
                 self._collection[self._id][key] = current + value.value
             elif isinstance(value, _ValueList):
-                # Handle ArrayUnion/ArrayRemove sentinels
+                # Handle ArrayUnion sentinels (ArrayRemove not used in this project)
                 current = self._collection[self._id].get(key, [])
                 for item in value.values:
                     if item not in current:
