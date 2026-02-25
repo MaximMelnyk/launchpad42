@@ -1,0 +1,113 @@
+/* Exercise card styles */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  background: var(--color-bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  text-align: left;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  width: 100%;
+  font-family: inherit;
+  color: var(--color-text-primary);
+}
+
+.card:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-popup);
+}
+
+.card:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Status border colors */
+.completed {
+  border-left: 3px solid var(--color-success);
+}
+
+.available {
+  border-left: 3px solid var(--color-accent);
+}
+
+.in_progress {
+  border-left: 3px solid var(--color-warning);
+}
+
+.locked {
+  border-left: 3px solid var(--color-text-muted);
+}
+
+.skipped {
+  border-left: 3px solid var(--color-text-secondary);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.module {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.statusBadge {
+  font-size: var(--font-size-xs);
+  padding: 2px var(--space-sm);
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--color-text-secondary);
+}
+
+.title {
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  font-size: var(--font-size-sm);
+}
+
+.difficulty {
+  color: var(--color-xp);
+  letter-spacing: 2px;
+}
+
+.xp {
+  font-family: var(--font-mono);
+  color: var(--color-xp);
+  font-weight: 600;
+}
+
+.time {
+  color: var(--color-text-muted);
+}
+
+.tags {
+  display: flex;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+}
+
+.tag {
+  font-size: var(--font-size-xs);
+  padding: 2px var(--space-sm);
+  border-radius: var(--radius-full);
+  background: rgba(0, 212, 170, 0.1);
+  color: var(--color-accent);
+}

@@ -1,0 +1,244 @@
+/* Progress page styles */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.heading {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.error {
+  color: var(--color-danger);
+  text-align: center;
+  padding: var(--space-xl);
+}
+
+.loading {
+  color: var(--color-text-secondary);
+}
+
+/* Stats grid */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-md);
+}
+
+.statCard {
+  background: var(--color-bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  align-items: center;
+  text-align: center;
+}
+
+.statLabel {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.statValue {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.statNumber {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--color-xp);
+}
+
+.xpSection {
+  background: var(--color-bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+}
+
+/* Sections */
+.section {
+  margin-top: var(--space-md);
+}
+
+.sectionTitle {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-md);
+}
+
+/* Level timeline */
+.timeline {
+  display: flex;
+  gap: var(--space-sm);
+  overflow-x: auto;
+  padding: var(--space-sm) 0;
+}
+
+.timelineItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  min-width: 80px;
+  padding: var(--space-md);
+  background: var(--color-bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  opacity: 0.4;
+}
+
+.timelinePast {
+  opacity: 0.7;
+  border-color: var(--color-success);
+}
+
+.timelineCurrent {
+  opacity: 1;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 8px rgba(0, 212, 170, 0.3);
+}
+
+.timelineName {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.currentLabel {
+  font-size: var(--font-size-xs);
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+/* Phase list */
+.phaseList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.phaseItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: var(--color-bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  opacity: 0.5;
+}
+
+.phasePast {
+  opacity: 0.7;
+}
+
+.phaseCurrent {
+  opacity: 1;
+  border-color: var(--color-accent);
+}
+
+.phaseIndicator {
+  font-size: var(--font-size-lg);
+  width: 28px;
+  text-align: center;
+}
+
+.phaseInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.phaseName {
+  font-weight: 600;
+  font-size: var(--font-size-md);
+}
+
+.phaseDays {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+/* Weekly grid */
+.weeklyGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--space-sm);
+}
+
+.weekDay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-md);
+  background: var(--color-bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+.weekDayComplete {
+  border-color: var(--color-success);
+}
+
+.weekDayLabel {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.weekDayIcon {
+  font-size: var(--font-size-lg);
+}
+
+/* Achievements */
+.achievementGroup {
+  margin-bottom: var(--space-lg);
+}
+
+.groupTitle {
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-md);
+}
+
+.achievementGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-md);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .weeklyGrid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .achievementGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .timeline {
+    flex-wrap: nowrap;
+  }
+}

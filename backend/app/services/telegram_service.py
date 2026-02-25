@@ -1,0 +1,654 @@
+"""Telegram bot service — student/mother commands, webhook handling, weekly reports."""
+
+from datetime import date, datetime, timedelta
+
+import structlog
+from google.cloud.firestore_v1 import AsyncClient
+from google.cloud.firestore_v1.base_query import FieldFilter
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
+from telegram.ext import (
+    Application,
+    CallbackQueryHandler,
+    CommandHandler,
+    ContextTypes,
+)
+
+from app.core.config import settings
+from app.models.gamification import (
+    LEVEL_NAMES,
+    LEVEL_XP_THRESHOLDS,
+    TelegramLink,
+    TelegramRole,
+)
+
+logger = structlog.get_logger()
+
+# Role constants
+STUDENT_COMMANDS = {"/start", "/today", "/progress", "/drill", "/hint", "/skip", "/mood"}
+MOTHER_COMMANDS = {"/start", "/today", "/week", "/streak", "/level"}
+
+# Mood emoji mapping
+MOOD_OPTIONS = {
+    "great": "1",
+    "good": "2",
+    "neutral": "3",
+    "tired": "4",
+    "struggling": "5",
+}
+
+MOOD_LABELS: dict[str, str] = {
+    "1": "Чудово",
+    "2": "Добре",
+    "3": "Нейтрально",
+    "4": "Втомлений",
+    "5": "Важко",
+}
+
+
+async def _get_db_from_context(context: ContextTypes.DEFAULT_TYPE) -> AsyncClient:
+    """Get Firestore client from bot context."""
+    return context.bot_data.get("db")
+
+
+async def _get_role(chat_id: int, db: AsyncClient) -> TelegramRole | None:
+    """Determine user role from telegram_links collection."""
+    doc = await db.collection("telegram_links").document(str(chat_id)).get()
+    if not doc.exists:
+        return None
+    data = doc.to_dict()
+    try:
+        return TelegramRole(data.get("role"))
+    except ValueError:
+        return None
+
+
+async def _get_student_uid(db: AsyncClient) -> str | None:
+    """Get the single student's UID (1-user platform)."""
+    query = db.collection("telegram_links").where(
+        filter=FieldFilter("role", "==", TelegramRole.STUDENT.value)
+    )
+    async for doc in query.stream():
+        data = doc.to_dict()
+        # Find user by telegram_chat_id
+        chat_id = data.get("chat_id")
+        users_query = db.collection("users").where(
+            filter=FieldFilter("telegram_chat_id", "==", chat_id)
+        )
+        async for user_doc in users_query.stream():
+            return user_doc.id
+    # Fallback: get first user
+    async for user_doc in db.collection("users").limit(1).stream():
+        return user_doc.id
+    return None
+
+
+# --- Student Handlers ---
+
+
+async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Welcome message, link telegram_chat_id to user."""
+    db = await _get_db_from_context(context)
+    if db is None:
+        await update.message.reply_text("Bot is initializing, try again later.")
+        return
+
+    chat_id = update.effective_chat.id
+    user_name = update.effective_user.first_name or "User"
+
+    # Check if already linked
+    doc = await db.collection("telegram_links").document(str(chat_id)).get()
+    if doc.exists:
+        role = doc.to_dict().get("role", "student")
+        if role == TelegramRole.MOTHER.value:
+            await update.message.reply_text(
+                f"Привіт! Ви підключені як спостерігач.\n"
+                f"Доступні команди: /today, /week, /streak, /level"
+            )
+        else:
+            await update.message.reply_text(
+                f"Привіт, {user_name}! Ти вже підключений до LaunchPad 42.\n"
+                f"Доступні команди: /today, /progress, /drill, /mood"
+            )
+        return
+
+    # Offer role selection
+    keyboard = [
+        [
+            InlineKeyboardButton("Студент", callback_data="role_student"),
+            InlineKeyboardButton("Спостерігач (мама)", callback_data="role_mother"),
+        ]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text(
+        f"Привіт, {user_name}! Хто ти?",
+        reply_markup=reply_markup,
+    )
+
+
+async def _handle_role_callback(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
+    """Handle role selection callback."""
+    db = await _get_db_from_context(context)
+    if db is None:
+        return
+
+    query = update.callback_query
+    await query.answer()
+
+    chat_id = update.effective_chat.id
+    data = query.data
+
+    if data == "role_student":
+        role = TelegramRole.STUDENT
+        # Link to user document
+        uid = await _get_student_uid(db)
+        if uid:
+            await db.collection("users").document(uid).set(
+                {"telegram_chat_id": chat_id, "updated_at": datetime.utcnow()},
+                merge=True,
+            )
+    elif data == "role_mother":
+        role = TelegramRole.MOTHER
+    else:
+        return
+
+    link = TelegramLink(
+        chat_id=chat_id,
+        role=role,
+        display_name=update.effective_user.first_name or "",
+    )
+    await db.collection("telegram_links").document(str(chat_id)).set(
+        link.model_dump()
+    )
+
+    if role == TelegramRole.STUDENT:
+        await query.edit_message_text(
+            "Ти підключений як студент! Використовуй /today щоб побачити план на сьогодні."
+        )
+    else:
+        await query.edit_message_text(
+            "Ви підключені як спостерігач. Використовуйте /week для тижневого звіту."
+        )
+
+
+async def cmd_today(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Today's exercises summary (student) or yes/no (mother)."""
+    db = await _get_db_from_context(context)
+    if db is None:
+        await update.message.reply_text("Bot is initializing.")
+        return
+
+    chat_id = update.effective_chat.id
+    role = await _get_role(chat_id, db)
+
+    uid = await _get_student_uid(db)
+    if not uid:
+        await update.message.reply_text("Студент ще не зареєстрований.")
+        return
+
+    today_str = date.today().isoformat()
+    session_doc = await db.collection("sessions").document(f"{uid}_{today_str}").get()
+
+    if role == TelegramRole.MOTHER:
+        # Mother sees only yes/no
+        if session_doc.exists:
+            data = session_doc.to_dict()
+            if data.get("finished_at"):
+                await update.message.reply_text("Сьогодні: Так, сесію завершено.")
+            else:
+                await update.message.reply_text("Сьогодні: Сесія в процесі.")
+        else:
+            await update.message.reply_text("Сьогодні: Ще не починав.")
+        return
+
+    # Student view
+    if session_doc.exists:
+        data = session_doc.to_dict()
+        exercises = data.get("exercises_completed", [])
+        xp = data.get("xp_earned", 0)
+        mood = data.get("mood_start", "?")
+
+        text = (
+            f"Сьогоднішня сесія:\n"
+            f"Настрій: {MOOD_LABELS.get(mood, mood)}\n"
+            f"Вправ виконано: {len(exercises)}\n"
+            f"XP зароблено: {xp}\n"
+        )
+        if data.get("finished_at"):
+            text += "Статус: Завершено"
+        else:
+            text += "Статус: В процесі"
+    else:
+        text = "Сьогодні сесію ще не розпочато. Використай /mood щоб почати!"
+
+    await update.message.reply_text(text)
+
+
+async def cmd_progress(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Level, XP, streak, phase summary."""
+    db = await _get_db_from_context(context)
+    if db is None:
+        await update.message.reply_text("Bot is initializing.")
+        return
+
+    uid = await _get_student_uid(db)
+    if not uid:
+        await update.message.reply_text("Студент ще не зареєстрований.")
+        return
+
+    user_doc = await db.collection("users").document(uid).get()
+    if not user_doc.exists:
+        await update.message.reply_text("Профіль не знайдено.")
+        return
+
+    u = user_doc.to_dict()
+    level = u.get("level", 0)
+    xp = u.get("xp", 0)
+    next_xp = LEVEL_XP_THRESHOLDS.get(min(level + 1, 6), LEVEL_XP_THRESHOLDS[6])
+    level_name = LEVEL_NAMES.get(level, "?")
+    phase = u.get("phase", "phase0")
+    streak = u.get("streak_days", 0)
+    shields = u.get("shields", 0)
+
+    # Progress bar
+    progress_pct = min(100, int((xp / next_xp) * 100)) if next_xp > 0 else 100
+    bar_filled = progress_pct // 10
+    bar = "█" * bar_filled + "░" * (10 - bar_filled)
+
+    text = (
+        f"Рівень {level}: {level_name}\n"
+        f"XP: {xp}/{next_xp} [{bar}] {progress_pct}%\n"
+        f"Фаза: {phase}\n"
+        f"Серія: {streak} днів\n"
+        f"Щити: {'🛡' * shields if shields else 'немає'}"
+    )
+
+    await update.message.reply_text(text)
+
+
+async def cmd_drill(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Random function from drill pool."""
+    db = await _get_db_from_context(context)
+    if db is None:
+        await update.message.reply_text("Bot is initializing.")
+        return
+
+    uid = await _get_student_uid(db)
+    if not uid:
+        await update.message.reply_text("Студент ще не зареєстрований.")
+        return
+
+    drill_doc = await db.collection("drill_pool").document(uid).get()
+    if not drill_doc.exists or not drill_doc.to_dict().get("function_queue"):
+        await update.message.reply_text(
+            "Черга дрилів порожня. Заверши більше вправ, щоб заповнити чергу!"
+        )
+        return
+
+    queue = drill_doc.to_dict().get("function_queue", [])
+    # Pick the least recently drilled (first in queue)
+    next_drill = queue[0]
+
+    # Fetch exercise name
+    ex_doc = await db.collection("exercises").document(next_drill).get()
+    title = next_drill
+    if ex_doc.exists:
+        title = ex_doc.to_dict().get("title", next_drill)
+
+    await update.message.reply_text(
+        f"Дрил: {title}\n"
+        f"ID: {next_drill}\n\n"
+        f"Напиши функцію та завантаж результат через платформу.\n"
+        f"Відлік часу почався!"
+    )
+
+
+async def cmd_hint(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Current exercise hint (if in session)."""
+    db = await _get_db_from_context(context)
+    if db is None:
+        await update.message.reply_text("Bot is initializing.")
+        return
+
+    uid = await _get_student_uid(db)
+    if not uid:
+        await update.message.reply_text("Студент ще не зареєстрований.")
+        return
+
+    # Check current session
+    today_str = date.today().isoformat()
+    session_doc = await db.collection("sessions").document(f"{uid}_{today_str}").get()
+    if not session_doc.exists:
+        await update.message.reply_text("Немає активної сесії. Почни з /mood.")
+        return
+
+    await update.message.reply_text(
+        "Підказки доступні через платформу (веб-інтерфейс).\n"
+        "Кожна підказка зменшує бонус XP за вправу."
+    )
+
+
+async def cmd_skip(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Skip current exercise."""
+    await update.message.reply_text(
+        "Пропуск вправи реєструється через платформу (веб-інтерфейс).\n"
+        "Пропущені вправи можна повернути пізніше."
+    )
+
+
+async def cmd_mood(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Mood check with inline keyboard (5 moods)."""
+    keyboard = [
+        [
+            InlineKeyboardButton("1 Чудово", callback_data="mood_1"),
+            InlineKeyboardButton("2 Добре", callback_data="mood_2"),
+            InlineKeyboardButton("3 Нормально", callback_data="mood_3"),
+        ],
+        [
+            InlineKeyboardButton("4 Втомлений", callback_data="mood_4"),
+            InlineKeyboardButton("5 Важко", callback_data="mood_5"),
+        ],
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text(
+        "Як себе почуваєш?",
+        reply_markup=reply_markup,
+    )
+
+
+async def _handle_mood_callback(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
+    """Handle mood selection callback."""
+    db = await _get_db_from_context(context)
+    if db is None:
+        return
+
+    query = update.callback_query
+    await query.answer()
+
+    mood_value = query.data.replace("mood_", "")
+    mood_label = MOOD_LABELS.get(mood_value, mood_value)
+
+    uid = await _get_student_uid(db)
+    if not uid:
+        await query.edit_message_text("Студент ще не зареєстрований.")
+        return
+
+    # Start session via service
+    from app.services.session_service import start_session
+    await start_session(uid, mood_value, db)
+
+    await query.edit_message_text(
+        f"Настрій: {mood_label}\n"
+        f"Сесію розпочато! Використовуй /today для плану."
+    )
+
+
+# --- Mother Handlers ---
+
+
+async def mother_today(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Redirects to cmd_today which handles role differentiation."""
+    await cmd_today(update, context)
+
+
+async def mother_week(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Weekly summary (primary report)."""
+    db = await _get_db_from_context(context)
+    if db is None:
+        await update.message.reply_text("Bot is initializing.")
+        return
+
+    chat_id = update.effective_chat.id
+    role = await _get_role(chat_id, db)
+    if role != TelegramRole.MOTHER:
+        await update.message.reply_text("Ця команда тільки для спостерігача.")
+        return
+
+    uid = await _get_student_uid(db)
+    if not uid:
+        await update.message.reply_text("Студент ще не зареєстрований.")
+        return
+
+    text = await _generate_weekly_report(uid, db)
+    await update.message.reply_text(text)
+
+
+async def mother_streak(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Current streak info."""
+    db = await _get_db_from_context(context)
+    if db is None:
+        await update.message.reply_text("Bot is initializing.")
+        return
+
+    chat_id = update.effective_chat.id
+    role = await _get_role(chat_id, db)
+    if role != TelegramRole.MOTHER:
+        await update.message.reply_text("Ця команда тільки для спостерігача.")
+        return
+
+    uid = await _get_student_uid(db)
+    if not uid:
+        await update.message.reply_text("Студент ще не зареєстрований.")
+        return
+
+    user_doc = await db.collection("users").document(uid).get()
+    if not user_doc.exists:
+        await update.message.reply_text("Профіль не знайдено.")
+        return
+
+    u = user_doc.to_dict()
+    weekly_days = u.get("weekly_completed_days", [])
+
+    # Count this week
+    today = date.today()
+    monday = today - timedelta(days=today.weekday())
+    week_count = sum(
+        1 for d_str in weekly_days
+        if _is_date_in_range(d_str, monday, today)
+    )
+
+    streak = u.get("streak_days", 0)
+    shields = u.get("shields", 0)
+
+    await update.message.reply_text(
+        f"Тижнева активність: {week_count}/7 днів\n"
+        f"Серія: {streak} днів поспіль\n"
+        f"Щити: {shields}/3"
+    )
+
+
+async def mother_level(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Current level and phase."""
+    db = await _get_db_from_context(context)
+    if db is None:
+        await update.message.reply_text("Bot is initializing.")
+        return
+
+    chat_id = update.effective_chat.id
+    role = await _get_role(chat_id, db)
+    if role != TelegramRole.MOTHER:
+        await update.message.reply_text("Ця команда тільки для спостерігача.")
+        return
+
+    uid = await _get_student_uid(db)
+    if not uid:
+        await update.message.reply_text("Студент ще не зареєстрований.")
+        return
+
+    user_doc = await db.collection("users").document(uid).get()
+    if not user_doc.exists:
+        await update.message.reply_text("Профіль не знайдено.")
+        return
+
+    u = user_doc.to_dict()
+    level = u.get("level", 0)
+    xp = u.get("xp", 0)
+    next_xp = LEVEL_XP_THRESHOLDS.get(min(level + 1, 6), LEVEL_XP_THRESHOLDS[6])
+    level_name = LEVEL_NAMES.get(level, "?")
+    phase = u.get("phase", "phase0")
+
+    progress_pct = min(100, int((xp / next_xp) * 100)) if next_xp > 0 else 100
+    bar_filled = progress_pct // 10
+    bar = "█" * bar_filled + "░" * (10 - bar_filled)
+
+    await update.message.reply_text(
+        f"Рівень {level}: {level_name}\n"
+        f"Прогрес: [{bar}] {progress_pct}%\n"
+        f"Фаза: {phase}"
+    )
+
+
+# --- Reports ---
+
+
+async def _generate_weekly_report(uid: str, db: AsyncClient) -> str:
+    """Generate weekly summary text."""
+    user_doc = await db.collection("users").document(uid).get()
+    if not user_doc.exists:
+        return "Профіль студента не знайдено."
+
+    u = user_doc.to_dict()
+
+    # Count sessions this week
+    today = date.today()
+    monday = today - timedelta(days=today.weekday())
+    sessions_count = 0
+    total_xp = 0
+    total_exercises = 0
+
+    for i in range(7):
+        d = monday + timedelta(days=i)
+        if d > today:
+            break
+        doc_id = f"{uid}_{d.isoformat()}"
+        session_doc = await db.collection("sessions").document(doc_id).get()
+        if session_doc.exists:
+            s_data = session_doc.to_dict()
+            sessions_count += 1
+            total_xp += s_data.get("xp_earned", 0)
+            total_exercises += len(s_data.get("exercises_completed", []))
+
+    level = u.get("level", 0)
+    level_name = LEVEL_NAMES.get(level, "?")
+    streak = u.get("streak_days", 0)
+    phase = u.get("phase", "phase0")
+
+    report = (
+        f"Тижневий звіт ({monday.isoformat()} — {today.isoformat()}):\n\n"
+        f"Сесій проведено: {sessions_count}/7\n"
+        f"Вправ виконано: {total_exercises}\n"
+        f"XP зароблено: {total_xp}\n"
+        f"Серія: {streak} днів\n\n"
+        f"Рівень: {level} ({level_name})\n"
+        f"Фаза: {phase}\n\n"
+        f"Загальний XP: {u.get('xp', 0)}"
+    )
+
+    return report
+
+
+async def send_weekly_report(db: AsyncClient) -> None:
+    """Sunday 19:00 auto-report to mother."""
+    # Find mother chat
+    query = db.collection("telegram_links").where(
+        filter=FieldFilter("role", "==", TelegramRole.MOTHER.value)
+    )
+    mother_chat_id: int | None = None
+    async for doc in query.stream():
+        mother_chat_id = doc.to_dict().get("chat_id")
+        break
+
+    if not mother_chat_id:
+        logger.warning("No mother chat linked for weekly report")
+        return
+
+    uid = await _get_student_uid(db)
+    if not uid:
+        logger.warning("No student found for weekly report")
+        return
+
+    report = await _generate_weekly_report(uid, db)
+
+    # Send via bot API
+    from telegram import Bot
+    if settings.telegram_bot_token:
+        bot = Bot(settings.telegram_bot_token)
+        await bot.send_message(chat_id=mother_chat_id, text=report)
+        logger.info("Weekly report sent to mother", chat_id=mother_chat_id)
+
+
+async def send_student_preview(db: AsyncClient) -> None:
+    """Saturday 19:00 preview to student."""
+    uid = await _get_student_uid(db)
+    if not uid:
+        return
+
+    user_doc = await db.collection("users").document(uid).get()
+    if not user_doc.exists:
+        return
+
+    u = user_doc.to_dict()
+    chat_id = u.get("telegram_chat_id")
+    if not chat_id:
+        return
+
+    report = await _generate_weekly_report(uid, db)
+    preview_text = (
+        f"Попередній перегляд тижневого звіту:\n\n{report}\n\n"
+        "Цей звіт буде надіслано завтра о 19:00."
+    )
+
+    from telegram import Bot
+    if settings.telegram_bot_token:
+        bot = Bot(settings.telegram_bot_token)
+        await bot.send_message(chat_id=chat_id, text=preview_text)
+        logger.info("Student preview sent", chat_id=chat_id)
+
+
+def _is_date_in_range(d_str: str, start: date, end: date) -> bool:
+    """Check if date string falls within range (inclusive)."""
+    try:
+        d = date.fromisoformat(d_str)
+        return start <= d <= end
+    except ValueError:
+        return False
+
+
+# --- Bot Setup ---
+
+
+def setup_bot(token: str) -> Application:
+    """Create bot Application, register all handlers."""
+    app = Application.builder().token(token).build()
+
+    # Command handlers
+    app.add_handler(CommandHandler("start", cmd_start))
+    app.add_handler(CommandHandler("today", cmd_today))
+    app.add_handler(CommandHandler("progress", cmd_progress))
+    app.add_handler(CommandHandler("drill", cmd_drill))
+    app.add_handler(CommandHandler("hint", cmd_hint))
+    app.add_handler(CommandHandler("skip", cmd_skip))
+    app.add_handler(CommandHandler("mood", cmd_mood))
+
+    # Mother-specific commands (handled via role check inside)
+    app.add_handler(CommandHandler("week", mother_week))
+    app.add_handler(CommandHandler("streak", mother_streak))
+    app.add_handler(CommandHandler("level", mother_level))
+
+    # Callback handlers
+    app.add_handler(CallbackQueryHandler(_handle_role_callback, pattern=r"^role_"))
+    app.add_handler(CallbackQueryHandler(_handle_mood_callback, pattern=r"^mood_"))
+
+    return app
+
+
+async def handle_webhook(update_data: dict, db: AsyncClient, bot_app: Application) -> None:
+    """Parse webhook update and process."""
+    # Store db in bot_data for handlers to access
+    bot_app.bot_data["db"] = db
+
+    update = Update.de_json(update_data, bot_app.bot)
+    await bot_app.process_update(update)

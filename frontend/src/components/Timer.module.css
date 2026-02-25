@@ -1,0 +1,56 @@
+/* Timer styles */
+
+.timer {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+.icon {
+  font-size: var(--font-size-lg);
+}
+
+.time {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: 0.05em;
+}
+
+.warning {
+  border-color: var(--color-warning);
+  animation: warningPulse 1s ease-in-out infinite;
+}
+
+.warning .time {
+  color: var(--color-warning);
+}
+
+.expired {
+  border-color: var(--color-danger);
+  animation: none;
+}
+
+.expired .time {
+  color: var(--color-danger);
+}
+
+.expiredText {
+  font-size: var(--font-size-sm);
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+@keyframes warningPulse {
+  0%, 100% {
+    box-shadow: 0 0 4px rgba(255, 170, 0, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(255, 170, 0, 0.6);
+  }
+}

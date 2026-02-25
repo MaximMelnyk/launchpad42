@@ -1,0 +1,170 @@
+# Phase 0 — Review Cards (SRS flashcards)
+# 25 concept cards covering Days 1-10
+
+# --- Syscalls & I/O ---
+
+- id: rc_p0_write_syscall
+  category: "syscall"
+  front: "Як працює write()? Які параметри?"
+  back: "write(fd, buf, count) -- записує count байтів з buf у файловий дескриптор fd. fd=1 для stdout. Повертає кількість записаних байтів або -1 при помилці. Заголовок: <unistd.h>."
+  phase: "phase0"
+
+- id: rc_p0_fd_stdout
+  category: "syscall"
+  front: "Що таке файловий дескриптор? Яке значення fd для stdout?"
+  back: "Файловий дескриптор (fd) -- це ціле число, яке ідентифікує відкритий файл. Стандартні: 0=stdin, 1=stdout, 2=stderr."
+  phase: "phase0"
+
+- id: rc_p0_ft_putchar
+  category: "function"
+  front: "Напиши прототип та тіло ft_putchar."
+  back: "void ft_putchar(char c) { write(1, &c, 1); } -- виводить один символ на stdout. Оператор & повертає адресу змінної c."
+  phase: "phase0"
+
+# --- Types & Variables ---
+
+- id: rc_p0_char_vs_int
+  category: "concept"
+  front: "Чим відрізняються char та int у C?"
+  back: "char -- 1 байт (зазвичай 8 біт), зберігає символ або маленьке число (-128..127). int -- зазвичай 4 байти, зберігає цілі числа (-2147483648..2147483647)."
+  phase: "phase0"
+
+- id: rc_p0_sizeof
+  category: "concept"
+  front: "Що повертає оператор sizeof? Які типові розміри на 64-bit?"
+  back: "sizeof повертає розмір типу або змінної в байтах. Типові значення: char=1, int=4, float=4, double=8. sizeof(char) гарантовано == 1."
+  phase: "phase0"
+
+- id: rc_p0_int_min_max
+  category: "concept"
+  front: "Які мінімальне та максимальне значення int?"
+  back: "INT_MIN = -2147483648, INT_MAX = 2147483647. Визначені в <limits.h>. Увага: -INT_MIN переповнює int!"
+  phase: "phase0"
+
+- id: rc_p0_variable_declaration
+  category: "norminette"
+  front: "Де оголошувати змінні за правилами Norminette?"
+  back: "Тільки на початку функції, перед будь-яким кодом (C89 стиль). Максимум 5 змінних на функцію. Оголошення та ініціалізацію можна в одному рядку: int i = 0;"
+  phase: "phase0"
+
+# --- ASCII ---
+
+- id: rc_p0_ascii_a
+  category: "concept"
+  front: "Який ASCII код символу 'A'? А 'a'? А '0'?"
+  back: "A=65, Z=90. a=97, z=122. 0=48, 9=57. Пробіл=32. Різниця між великою та малою літерою: 32."
+  phase: "phase0"
+
+- id: rc_p0_char_arithmetic
+  category: "concept"
+  front: "Як перетворити малу літеру на велику через арифметику?"
+  back: "Віднімаємо 32 (або 'a' - 'A'): if (c >= 'a' && c <= 'z') c = c - 32; Символи в C -- це числа, з ними можна робити арифметику."
+  phase: "phase0"
+
+- id: rc_p0_digit_to_char
+  category: "concept"
+  front: "Як перетворити цифру 5 (int) на символ '5' (char)?"
+  back: "Додай '0' (ASCII 48): char c = digit + '0'; Зворотно: int digit = c - '0'; Працює для цифр 0-9."
+  phase: "phase0"
+
+# --- Control Flow ---
+
+- id: rc_p0_while_syntax
+  category: "syntax"
+  front: "Як виглядає синтаксис while у C?"
+  back: "while (condition) { body; } -- виконує тіло, поки умова істинна. Не забудь змінювати лічильник! Цикл for заборонений Norminette."
+  phase: "phase0"
+
+- id: rc_p0_if_else
+  category: "syntax"
+  front: "Як виглядає if/else if/else у C?"
+  back: "if (cond1) { ... } else if (cond2) { ... } else { ... } Ternary (?:) та switch заборонені Norminette."
+  phase: "phase0"
+
+- id: rc_p0_no_for
+  category: "norminette"
+  front: "Чому на 42 не можна використовувати for?"
+  back: "Norminette v3 забороняє for, do-while, switch, ternary (?:), goto. Єдиний дозволений цикл -- while."
+  phase: "phase0"
+
+# --- Functions ---
+
+- id: rc_p0_ft_putstr
+  category: "function"
+  front: "Напиши прототип ft_putstr. Як вона працює?"
+  back: "void ft_putstr(char *str); Проходимо рядок while (str[i] != '\\0'), викликаючи ft_putchar для кожного символу. '\\0' -- нульовий термінатор рядка."
+  phase: "phase0"
+
+- id: rc_p0_ft_putnbr
+  category: "function"
+  front: "Який алгоритм ft_putnbr? Як обробити INT_MIN?"
+  back: "1) INT_MIN окремо (write напряму). 2) Якщо nb<0: виведи '-', nb=-nb. 3) Якщо nb>=10: рекурсія ft_putnbr(nb/10). 4) ft_putchar(nb%10+'0')."
+  phase: "phase0"
+
+- id: rc_p0_return_value
+  category: "concept"
+  front: "Чим відрізняється void функція від функції з return?"
+  back: "void нічого не повертає (ft_putchar, ft_putstr). Функція з типом повертає значення через return (int ft_is_in_range повертає 0 або 1). main повертає 0 при успіху."
+  phase: "phase0"
+
+- id: rc_p0_max_params
+  category: "norminette"
+  front: "Скільки максимум параметрів та рядків може бути у функції (Norminette)?"
+  back: "Максимум 4 параметри. Максимум 25 рядків тіла функції (без фігурних дужок). Максимум 5 змінних. Максимум 5 функцій на файл."
+  phase: "phase0"
+
+# --- Compilation ---
+
+- id: rc_p0_gcc_flags
+  category: "tools"
+  front: "Що означають прапорці -Wall -Wextra -Werror?"
+  back: "-Wall: увімкнути основні попередження. -Wextra: додаткові попередження. -Werror: перетворити попередження на помилки (код не скомпілюється з попередженнями). На 42 обов'язково!"
+  phase: "phase0"
+
+- id: rc_p0_multi_file
+  category: "tools"
+  front: "Як скомпілювати програму з кількох .c файлів?"
+  back: "gcc -Wall -Wextra -Werror file1.c file2.c file3.c -o program_name. Кожен файл компілюється окремо, потім лінкується в один виконуваний файл."
+  phase: "phase0"
+
+- id: rc_p0_include
+  category: "syntax"
+  front: "Що робить #include? Яка різниця між <> та \"\"?"
+  back: "#include підключає заголовковий файл. <unistd.h> шукає в системних шляхах. \"myheader.h\" шукає спочатку в поточній директорії. unistd.h потрібен для write()."
+  phase: "phase0"
+
+# --- Strings ---
+
+- id: rc_p0_null_terminator
+  category: "concept"
+  front: "Що таке нульовий термінатор і навіщо він потрібен?"
+  back: "'\\0' (значення 0) -- спеціальний символ, який позначає кінець рядка (string) у C. Рядок \"Hi\" займає 3 байти в пам'яті: 'H', 'i', '\\0'. Без нього функції не знають, де кінець рядка."
+  phase: "phase0"
+
+- id: rc_p0_string_iteration
+  category: "pattern"
+  front: "Як ітерувати по рядку в C?"
+  back: "int i = 0; while (str[i] != '\\0') { /* use str[i] */ i++; } Або через вказівник: while (*str) { /* use *str */ str++; }"
+  phase: "phase0"
+
+# --- Vim ---
+
+- id: rc_p0_vim_modes
+  category: "tools"
+  front: "Які основні режими Vim? Як перемикатися?"
+  back: "Normal (за замовчуванням) -- навігація та команди. Insert (i) -- введення тексту. Visual (v/V) -- виділення. Command (:) -- команди. Esc повертає в Normal."
+  phase: "phase0"
+
+- id: rc_p0_vim_save_quit
+  category: "tools"
+  front: "Як зберегти та вийти з Vim?"
+  back: ":w -- зберегти. :q -- вийти. :wq -- зберегти і вийти. :q! -- вийти без збереження. ZZ -- те саме що :wq."
+  phase: "phase0"
+
+# --- Norminette ---
+
+- id: rc_p0_norminette_rules
+  category: "norminette"
+  front: "Назви 5 головних правил Norminette."
+  back: "1) Max 25 рядків тіла функції. 2) Max 5 змінних. 3) Max 4 параметри. 4) Тільки while (no for/do-while/switch/ternary/goto). 5) Змінні на початку функції. Бонус: snake_case для імен, заборона глобальних змінних."
+  phase: "phase0"

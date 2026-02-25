@@ -1,0 +1,53 @@
+/* Level badge styles */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  border: 2px solid;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  background: var(--color-bg-primary);
+  flex-shrink: 0;
+}
+
+.name {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+/* Sizes */
+.sm .circle {
+  width: 28px;
+  height: 28px;
+  font-size: var(--font-size-xs);
+}
+
+.md .circle {
+  width: 40px;
+  height: 40px;
+  font-size: var(--font-size-md);
+}
+
+.md .name {
+  font-size: var(--font-size-md);
+}
+
+.lg .circle {
+  width: 56px;
+  height: 56px;
+  font-size: var(--font-size-xl);
+  border-width: 3px;
+}
+
+.lg .name {
+  font-size: var(--font-size-lg);
+}

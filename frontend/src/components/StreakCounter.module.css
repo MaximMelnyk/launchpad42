@@ -1,0 +1,85 @@
+/* Streak counter styles */
+
+.wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  flex-wrap: wrap;
+}
+
+.weekly {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.weeklyLabel {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.weeklyDots {
+  display: flex;
+  gap: 4px;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--radius-full);
+  background: var(--color-bg-primary);
+  border: 1px solid var(--border-color);
+  transition: all var(--transition-fast);
+}
+
+.dotFilled {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 6px rgba(0, 212, 170, 0.4);
+}
+
+.weeklyCount {
+  font-family: var(--font-mono);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+.streak {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.flame {
+  font-size: var(--font-size-lg);
+}
+
+.streakCount {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: var(--font-size-md);
+  color: var(--color-streak);
+}
+
+.streakLabel {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.shields {
+  display: flex;
+  gap: 2px;
+}
+
+.shield {
+  font-size: var(--font-size-md);
+  opacity: 0.3;
+  filter: grayscale(1);
+  transition: all var(--transition-fast);
+}
+
+.shieldActive {
+  opacity: 1;
+  filter: grayscale(0);
+}

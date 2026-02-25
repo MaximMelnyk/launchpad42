@@ -5,6 +5,7 @@ __pycache__/
 dist/
 .venv/
 venv/
+.hypothesis/
 
 # Node
 node_modules/
@@ -25,6 +26,7 @@ firebase-debug.log
 
 # Build
 frontend/dist/
+frontend/tsconfig.tsbuildinfo
 backend/*.egg-info
 
 # OS

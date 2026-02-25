@@ -1,0 +1,142 @@
+# Phase 0 — French tech vocabulary
+# 20 essential terms for the first 10 days
+
+- id: vocab_p0_terminal
+  term_fr: "terminal"
+  term_uk: "термінал"
+  term_en: "terminal"
+  context: "Ouvrir le terminal pour compiler"
+  phase: "phase0"
+
+- id: vocab_p0_programme
+  term_fr: "programme"
+  term_uk: "програма"
+  term_en: "program"
+  context: "Écrire un programme en C"
+  phase: "phase0"
+
+- id: vocab_p0_compilateur
+  term_fr: "compilateur"
+  term_uk: "компілятор"
+  term_en: "compiler"
+  context: "Le compilateur traduit ton code en langage machine"
+  phase: "phase0"
+
+- id: vocab_p0_compiler
+  term_fr: "compiler"
+  term_uk: "компілювати"
+  term_en: "to compile"
+  context: "Il faut compiler le code avant de l'exécuter"
+  phase: "phase0"
+
+- id: vocab_p0_executer
+  term_fr: "exécuter"
+  term_uk: "виконати"
+  term_en: "to execute / to run"
+  context: "Exécuter le programme avec ./a.out"
+  phase: "phase0"
+
+- id: vocab_p0_variable
+  term_fr: "variable"
+  term_uk: "змінна"
+  term_en: "variable"
+  context: "Déclarer une variable de type int"
+  phase: "phase0"
+
+- id: vocab_p0_type
+  term_fr: "type"
+  term_uk: "тип"
+  term_en: "type"
+  context: "Le type char pour les caractères"
+  phase: "phase0"
+
+- id: vocab_p0_caractere
+  term_fr: "caractère"
+  term_uk: "символ"
+  term_en: "character"
+  context: "Afficher un caractère avec write"
+  phase: "phase0"
+
+- id: vocab_p0_entier
+  term_fr: "entier"
+  term_uk: "ціле число"
+  term_en: "integer"
+  context: "Un entier peut être négatif ou positif"
+  phase: "phase0"
+
+- id: vocab_p0_condition
+  term_fr: "condition"
+  term_uk: "умова"
+  term_en: "condition"
+  context: "Vérifier une condition avec if"
+  phase: "phase0"
+
+- id: vocab_p0_boucle
+  term_fr: "boucle"
+  term_uk: "цикл"
+  term_en: "loop"
+  context: "Utiliser une boucle while pour répéter"
+  phase: "phase0"
+
+- id: vocab_p0_fonction
+  term_fr: "fonction"
+  term_uk: "функція"
+  term_en: "function"
+  context: "Écrire une fonction qui retourne un int"
+  phase: "phase0"
+
+- id: vocab_p0_afficher
+  term_fr: "afficher"
+  term_uk: "відобразити / вивести"
+  term_en: "to display / to print"
+  context: "Afficher le résultat à l'écran"
+  phase: "phase0"
+
+- id: vocab_p0_erreur
+  term_fr: "erreur"
+  term_uk: "помилка"
+  term_en: "error"
+  context: "Le compilateur affiche une erreur"
+  phase: "phase0"
+
+- id: vocab_p0_fichier
+  term_fr: "fichier"
+  term_uk: "файл"
+  term_en: "file"
+  context: "Créer un fichier source en C"
+  phase: "phase0"
+
+- id: vocab_p0_repertoire
+  term_fr: "répertoire"
+  term_uk: "каталог / директорія"
+  term_en: "directory"
+  context: "Se déplacer dans un répertoire avec cd"
+  phase: "phase0"
+
+- id: vocab_p0_memoire
+  term_fr: "mémoire"
+  term_uk: "пам'ять"
+  term_en: "memory"
+  context: "Chaque variable occupe de la mémoire"
+  phase: "phase0"
+
+- id: vocab_p0_bibliotheque
+  term_fr: "bibliothèque"
+  term_uk: "бібліотека"
+  term_en: "library"
+  context: "Inclure une bibliothèque avec #include"
+  phase: "phase0"
+
+- id: vocab_p0_code_source
+  term_fr: "code source"
+  term_uk: "вихідний код"
+  term_en: "source code"
+  context: "Lire le code source pour comprendre le programme"
+  phase: "phase0"
+
+- id: vocab_p0_retour
+  term_fr: "valeur de retour"
+  term_uk: "значення повернення"
+  term_en: "return value"
+  context: "La fonction main retourne 0 en cas de succès"
+  phase: "phase0"

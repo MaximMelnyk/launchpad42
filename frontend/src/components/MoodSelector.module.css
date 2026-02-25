@@ -1,0 +1,55 @@
+/* Mood selector styles */
+
+.wrapper {
+  text-align: center;
+}
+
+.title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-lg);
+}
+
+.options {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  background: var(--color-bg-card);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  min-width: 100px;
+  font-family: inherit;
+  color: var(--color-text-primary);
+}
+
+.option:hover {
+  border-color: var(--color-accent);
+  transform: translateY(-2px);
+}
+
+.optionSelected {
+  border-color: var(--color-accent);
+  background: rgba(0, 212, 170, 0.1);
+  box-shadow: 0 0 12px rgba(0, 212, 170, 0.2);
+}
+
+.emoji {
+  font-size: 2rem;
+}
+
+.label {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
