@@ -422,19 +422,21 @@ async def process_drill(
     now = datetime.now(timezone.utc)
     today_str = date.today().isoformat()
 
-    # Validate function_name refers to an actual exercise
-    ex_check = await db.collection("exercises").document(function_name).get()
-    if not ex_check.exists:
-        return {"correct": False, "xp_earned": 0, "error": "Unknown function"}
-
-    # P1-5: Check if function was already drilled today
+    # Validate function_name is in user's assigned drill queue
     drill_ref = db.collection("drill_pool").document(uid)
     drill_doc = await drill_ref.get()
 
-    if drill_doc.exists:
-        drill_data = drill_doc.to_dict()
-        last_drilled = drill_data.get("last_drilled", {})
-        if last_drilled.get(function_name) == today_str:
+    if not drill_doc.exists:
+        return {"correct": False, "xp_earned": 0, "error": "No drill queue assigned"}
+
+    drill_data = drill_doc.to_dict()
+    queue = drill_data.get("function_queue", [])
+    if function_name not in queue:
+        return {"correct": False, "xp_earned": 0, "error": "Function not in drill queue"}
+
+    # P1-5: Check if function was already drilled today
+    last_drilled = drill_data.get("last_drilled", {})
+    if last_drilled.get(function_name) == today_str:
             logger.info(
                 "Drill already completed today, no XP awarded",
                 uid=uid,
@@ -455,37 +457,23 @@ async def process_drill(
     else:
         xp_earned = XP_BONUS_DRILL  # 10 XP for slow completion
 
-    # Update drill pool — re-read not needed, we already have drill_doc
+    # Update drill pool — move drilled function to end of queue
+    last_drilled[function_name] = today_str
 
-    if drill_doc.exists:
-        drill_data = drill_doc.to_dict()
-        last_drilled = drill_data.get("last_drilled", {})
-        last_drilled[function_name] = today_str
-        queue = drill_data.get("function_queue", [])
+    # Move drilled function to end of queue (least-recently-drilled first)
+    if function_name in queue:
+        queue.remove(function_name)
+        queue.append(function_name)
 
-        # Move drilled function to end of queue (least-recently-drilled first)
-        if function_name in queue:
-            queue.remove(function_name)
-            queue.append(function_name)
-
-        await drill_ref.set(
-            {
-                "uid": uid,
-                "function_queue": queue,
-                "last_drilled": last_drilled,
-                "updated_at": now,
-            },
-            merge=True,
-        )
-    else:
-        await drill_ref.set(
-            {
-                "uid": uid,
-                "function_queue": [function_name],
-                "last_drilled": {function_name: today_str},
-                "updated_at": now,
-            }
-        )
+    await drill_ref.set(
+        {
+            "uid": uid,
+            "function_queue": queue,
+            "last_drilled": last_drilled,
+            "updated_at": now,
+        },
+        merge=True,
+    )
 
     # Update user XP
     user_doc = await db.collection("users").document(uid).get()

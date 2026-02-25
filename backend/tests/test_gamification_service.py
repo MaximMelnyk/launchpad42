@@ -279,6 +279,11 @@ class TestDrill:
         db = MockFirestoreDB()
         db.seed("users", TEST_UID, {"xp": 100})
         db.seed("exercises", "ft_strlen", {"estimated_minutes": 15})
+        db.seed("drill_pool", TEST_UID, {
+            "uid": TEST_UID,
+            "function_queue": ["ft_strlen"],
+            "last_drilled": {},
+        })
 
         result = await process_drill(TEST_UID, "ft_strlen", 600, db)  # 10 min < 15 min
         assert result["correct"] is True
@@ -289,6 +294,11 @@ class TestDrill:
         db = MockFirestoreDB()
         db.seed("users", TEST_UID, {"xp": 100})
         db.seed("exercises", "ft_strlen", {"estimated_minutes": 15})
+        db.seed("drill_pool", TEST_UID, {
+            "uid": TEST_UID,
+            "function_queue": ["ft_strlen"],
+            "last_drilled": {},
+        })
 
         result = await process_drill(TEST_UID, "ft_strlen", 1200, db)  # 20 min > 15 min
         assert result["xp_earned"] == XP_BONUS_DRILL  # 10
@@ -310,26 +320,36 @@ class TestDrill:
         assert pool["function_queue"] == ["ft_putchar", "ft_strlen"]
 
     @pytest.mark.asyncio
-    async def test_drill_unknown_function_returns_error(self):
+    async def test_drill_function_not_in_queue_returns_error(self):
+        """Drilling an existing exercise NOT in user's queue should be rejected."""
         db = MockFirestoreDB()
         db.seed("users", TEST_UID, {"xp": 100})
+        db.seed("exercises", "ft_strlen", {"estimated_minutes": 15})
+        db.seed("exercises", "ft_putchar", {"estimated_minutes": 10})
+        db.seed("drill_pool", TEST_UID, {
+            "uid": TEST_UID,
+            "function_queue": ["ft_strlen"],
+            "last_drilled": {},
+        })
 
-        result = await process_drill(TEST_UID, "nonexistent_func", 600, db)
+        result = await process_drill(TEST_UID, "ft_putchar", 600, db)
         assert result["correct"] is False
         assert result["xp_earned"] == 0
-        assert result["error"] == "Unknown function"
+        assert result["error"] == "Function not in drill queue"
         # User XP should not change
         assert db._collections["users"][TEST_UID]["xp"] == 100
 
     @pytest.mark.asyncio
-    async def test_drill_creates_pool_if_missing(self):
+    async def test_drill_no_pool_returns_error(self):
+        """Drilling without a drill_pool assigned should be rejected."""
         db = MockFirestoreDB()
-        db.seed("users", TEST_UID, {"xp": 0})
+        db.seed("users", TEST_UID, {"xp": 100})
         db.seed("exercises", "ft_strlen", {"estimated_minutes": 15})
 
-        await process_drill(TEST_UID, "ft_strlen", 600, db)
-
-        assert TEST_UID in db._collections.get("drill_pool", {})
+        result = await process_drill(TEST_UID, "ft_strlen", 600, db)
+        assert result["correct"] is False
+        assert result["xp_earned"] == 0
+        assert result["error"] == "No drill queue assigned"
 
 
 # --- Review Tests ---

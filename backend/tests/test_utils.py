@@ -83,3 +83,33 @@ class TestCamelDict:
         assert result["canStart"] is True
         assert result["nextAvailable"] == "2026-03-01"
         assert result["nestedInfo"]["attemptCount"] == 3
+
+    def test_identity_map_keys_preserved(self):
+        """Identity map keys (like last_drilled) should not have sub-keys converted."""
+        result = camel_dict({
+            "uid": "user1",
+            "function_queue": ["c00_ex00", "c01_ex01"],
+            "last_drilled": {
+                "c00_ex00": "2026-02-25",
+                "c01_ex01": "2026-02-24",
+            },
+        })
+        assert result["lastDrilled"] == {
+            "c00_ex00": "2026-02-25",
+            "c01_ex01": "2026-02-24",
+        }
+        # Field name key IS converted, but sub-keys are NOT
+        assert "last_drilled" not in result
+        assert "c00Ex00" not in result.get("lastDrilled", {})
+
+    def test_identity_map_nested_in_parent(self):
+        """Identity map inside a nested dict is still preserved."""
+        result = camel_dict({
+            "drill_data": {
+                "uid": "user1",
+                "last_drilled": {"p0_d01_hello_world": "2026-02-25"},
+            }
+        })
+        assert result["drillData"]["lastDrilled"] == {
+            "p0_d01_hello_world": "2026-02-25",
+        }
