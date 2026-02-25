@@ -6,6 +6,7 @@ from google.cloud.firestore_v1 import AsyncClient
 
 from app.core.auth import get_uid
 from app.core.firebase import get_db
+from app.core.utils import camel_dict
 from app.models.user import UserProfile
 from app.services import (
     curriculum_service,
@@ -52,11 +53,11 @@ async def get_dashboard(
     # Current training day
     current_day = session_service.get_current_day()
 
-    return {
+    return camel_dict({
         "user": user.model_dump(by_alias=True),
         "session": session.model_dump(by_alias=True) if session else None,
         "today": today_data,
         "gamification": gamification,
         "achievements": achievements,
         "current_day": current_day,
-    }
+    })

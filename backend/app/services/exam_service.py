@@ -16,6 +16,21 @@ from app.models.gamification import (
 
 logger = structlog.get_logger()
 
+
+def _ensure_aware(dt: datetime | str | None) -> datetime | None:
+    """Ensure a datetime is timezone-aware (UTC).
+
+    Handles None, naive datetimes, and ISO format strings from Firestore.
+    """
+    if dt is None:
+        return None
+    if isinstance(dt, str):
+        dt = datetime.fromisoformat(dt)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt
+
+
 # Cooldown and attempt limits
 COOLDOWN_HOURS = 48
 MAX_ATTEMPTS_PER_PERIOD = 3
@@ -71,10 +86,8 @@ async def check_cooldown(
             ExamStatus.FAILED.value,
             ExamStatus.PARTIAL.value,
         ):
-            finished_at = exam_data.get("finished_at")
+            finished_at = _ensure_aware(exam_data.get("finished_at"))
             if finished_at:
-                if isinstance(finished_at, str):
-                    finished_at = datetime.fromisoformat(finished_at)
                 cooldown_end = finished_at + timedelta(hours=COOLDOWN_HOURS)
                 if now < cooldown_end:
                     return {
@@ -86,10 +99,8 @@ async def check_cooldown(
     # Check attempt limit (3 per 14 days)
     recent_starts: list[datetime] = []
     for exam_data in recent_exams:
-        started = exam_data.get("started_at")
+        started = _ensure_aware(exam_data.get("started_at"))
         if started:
-            if isinstance(started, str):
-                started = datetime.fromisoformat(started)
             if started > cutoff_14d:
                 recent_starts.append(started)
 
@@ -206,10 +217,8 @@ async def submit_exam_exercise(
         raise ValueError("Exam is no longer in progress")
 
     # Check time limit
-    started_at = exam_data.get("started_at")
+    started_at = _ensure_aware(exam_data.get("started_at"))
     if started_at:
-        if isinstance(started_at, str):
-            started_at = datetime.fromisoformat(started_at)
         time_limit = timedelta(minutes=exam_data.get("time_limit_minutes", 240))
         if datetime.now(timezone.utc) > started_at + time_limit:
             # Time expired — auto-fail
@@ -321,10 +330,8 @@ async def get_exam_status(
 
     # Calculate time remaining
     time_remaining_minutes = 0
-    started_at = exam_data.get("started_at")
+    started_at = _ensure_aware(exam_data.get("started_at"))
     if started_at and exam_data.get("status") == ExamStatus.IN_PROGRESS.value:
-        if isinstance(started_at, str):
-            started_at = datetime.fromisoformat(started_at)
         time_limit = timedelta(minutes=exam_data.get("time_limit_minutes", 240))
         end_time = started_at + time_limit
         remaining = end_time - datetime.now(timezone.utc)

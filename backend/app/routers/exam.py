@@ -7,6 +7,7 @@ from pydantic import Field
 
 from app.core.auth import get_uid
 from app.core.firebase import get_db
+from app.core.utils import camel_dict
 from app.models import CamelModel
 from app.services import exam_service
 
@@ -37,7 +38,7 @@ async def start_exam_route(
     """Start a new exam. Checks cooldown and attempt limits first."""
     try:
         exam = await exam_service.start_exam(uid, data.exam_type, data.level, db)
-        return exam.model_dump(by_alias=True)
+        return camel_dict(exam.model_dump(by_alias=True))
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -54,9 +55,10 @@ async def submit_exam(
 ) -> dict:
     """Submit an exercise answer during exam."""
     try:
-        return await exam_service.submit_exam_exercise(
+        result = await exam_service.submit_exam_exercise(
             uid, exam_id, data.exercise_id, data.hash_code, db
         )
+        return camel_dict(result)
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -72,7 +74,8 @@ async def get_exam(
 ) -> dict:
     """Get exam status with time remaining."""
     try:
-        return await exam_service.get_exam_status(uid, exam_id, db)
+        result = await exam_service.get_exam_status(uid, exam_id, db)
+        return camel_dict(result)
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -87,4 +90,5 @@ async def check_cooldown(
     db: AsyncClient = Depends(get_db),
 ) -> dict:
     """Check cooldown status for an exam type."""
-    return await exam_service.check_cooldown(uid, exam_type, db)
+    result = await exam_service.check_cooldown(uid, exam_type, db)
+    return camel_dict(result)

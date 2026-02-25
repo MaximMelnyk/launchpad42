@@ -79,6 +79,20 @@ async def _require_linked(update: Update, db: AsyncClient) -> bool:
     return True
 
 
+async def _require_role(
+    update: Update, db: AsyncClient, required_role: TelegramRole
+) -> bool:
+    """Check if chat has the required role. Returns True if OK, else replies and returns False."""
+    chat_id = update.effective_chat.id
+    role = await _get_role(chat_id, db)
+    if role != required_role:
+        await update.message.reply_text(
+            "Ця команда недоступна для вашої ролі."
+        )
+        return False
+    return True
+
+
 async def _get_student_uid(db: AsyncClient) -> str | None:
     """Get the single student's UID (1-user platform)."""
     query = db.collection("telegram_links").where(
@@ -131,10 +145,18 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             )
         return
 
-    # Parse command arguments for mother access code: /start mother CODE
+    # Parse command arguments: /start student CODE or /start mother CODE
     args = context.args or []
-    if len(args) >= 2 and args[0].lower() == "mother":
-        provided_code = args[1]
+    if len(args) < 2 or args[0].lower() not in ("student", "mother"):
+        await update.message.reply_text(
+            "Введіть /start student КОД або /start mother КОД"
+        )
+        return
+
+    requested_role = args[0].lower()
+    provided_code = args[1]
+
+    if requested_role == "mother":
         if not settings.mother_access_code:
             await update.message.reply_text(
                 "Код доступу для спостерігача не налаштовано. "
@@ -142,9 +164,7 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             )
             return
         if provided_code != settings.mother_access_code:
-            await update.message.reply_text(
-                "Невірний код доступу."
-            )
+            await update.message.reply_text("Невірний код доступу.")
             return
 
         # Valid mother access code — link as mother
@@ -161,8 +181,18 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         )
         return
 
-    # Default: link as student (no access code needed)
-    role = TelegramRole.STUDENT
+    # requested_role == "student"
+    if not settings.student_access_code:
+        await update.message.reply_text(
+            "Код доступу для студента не налаштовано. "
+            "Зверніться до адміністратора."
+        )
+        return
+    if provided_code != settings.student_access_code:
+        await update.message.reply_text("Невірний код доступу.")
+        return
+
+    # Valid student access code — link as student
     uid = await _get_student_uid(db)
     if uid:
         await db.collection("users").document(uid).set(
@@ -172,7 +202,7 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     link = TelegramLink(
         chat_id=chat_id,
-        role=role,
+        role=TelegramRole.STUDENT,
         display_name=update.effective_user.first_name or "",
     )
     await db.collection("telegram_links").document(str(chat_id)).set(
@@ -253,6 +283,10 @@ async def cmd_progress(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     if not await _require_linked(update, db):
         return
 
+    # Role check: student only
+    if not await _require_role(update, db, TelegramRole.STUDENT):
+        return
+
     uid = await _get_student_uid(db)
     if not uid:
         await update.message.reply_text("Студент ще не зареєстрований.")
@@ -299,6 +333,10 @@ async def cmd_drill(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not await _require_linked(update, db):
         return
 
+    # Role check: student only
+    if not await _require_role(update, db, TelegramRole.STUDENT):
+        return
+
     uid = await _get_student_uid(db)
     if not uid:
         await update.message.reply_text("Студент ще не зареєстрований.")
@@ -340,6 +378,10 @@ async def cmd_hint(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not await _require_linked(update, db):
         return
 
+    # Role check: student only
+    if not await _require_role(update, db, TelegramRole.STUDENT):
+        return
+
     uid = await _get_student_uid(db)
     if not uid:
         await update.message.reply_text("Студент ще не зареєстрований.")
@@ -369,6 +411,10 @@ async def cmd_skip(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not await _require_linked(update, db):
         return
 
+    # Role check: student only
+    if not await _require_role(update, db, TelegramRole.STUDENT):
+        return
+
     await update.message.reply_text(
         "Пропуск вправи реєструється через платформу (веб-інтерфейс).\n"
         "Пропущені вправи можна повернути пізніше."
@@ -384,6 +430,10 @@ async def cmd_mood(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
     # P1-3: Verify chat is linked
     if not await _require_linked(update, db):
+        return
+
+    # Role check: student only
+    if not await _require_role(update, db, TelegramRole.STUDENT):
         return
 
     keyboard = [

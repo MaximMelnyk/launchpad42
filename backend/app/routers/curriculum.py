@@ -6,6 +6,7 @@ from google.cloud.firestore_v1 import AsyncClient
 
 from app.core.auth import get_uid
 from app.core.firebase import get_db
+from app.core.utils import camel_dict
 from app.models.exercise import Exercise, ExerciseSubmission
 from app.services import curriculum_service, exercise_service
 
@@ -18,8 +19,9 @@ async def get_today(
     uid: str = Depends(get_uid),
     db: AsyncClient = Depends(get_db),
 ) -> dict:
-    """Returns {exercises, review_cards, drill, current_day, phase}."""
-    return await curriculum_service.get_today_exercises(uid, db)
+    """Returns {exercises, reviewCards, drill, currentDay, phase}."""
+    result = await curriculum_service.get_today_exercises(uid, db)
+    return camel_dict(result)
 
 
 @router.get("/exercises/{exercise_id}")
@@ -40,10 +42,13 @@ async def get_exercise(
     # Fetch user progress for this exercise
     progress = await exercise_service.get_exercise_progress(uid, exercise_id, db)
 
-    return {
+    # Start exercise tracking when student views it (Fix 5)
+    await exercise_service.start_exercise(uid, exercise_id, db)
+
+    return camel_dict({
         "exercise": exercise.model_dump(by_alias=True),
         "progress": progress.model_dump(by_alias=True) if progress else None,
-    }
+    })
 
 
 @router.get("/phase/{phase}")
@@ -66,10 +71,10 @@ async def get_phase(
     for ex in exercises:
         progress = await exercise_service.get_exercise_progress(uid, ex.id, db)
         result.append(
-            {
+            camel_dict({
                 "exercise": ex.model_dump(by_alias=True),
                 "progress": progress.model_dump(by_alias=True) if progress else None,
-            }
+            })
         )
 
     return result
@@ -82,7 +87,7 @@ async def submit_exercise(
     uid: str = Depends(get_uid),
     db: AsyncClient = Depends(get_db),
 ) -> dict:
-    """Submit exercise completion. Returns {xp_earned, bonuses, level_up, achievements_unlocked}."""
+    """Submit exercise completion. Returns {xpEarned, bonuses, levelUp, achievementsUnlocked}."""
     try:
         result = await exercise_service.submit_exercise(
             uid, exercise_id, submission, db
@@ -93,4 +98,4 @@ async def submit_exercise(
             detail=str(e),
         )
 
-    return result
+    return camel_dict(result)

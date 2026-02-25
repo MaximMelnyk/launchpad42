@@ -186,6 +186,6 @@ class TestGamificationEndpoints:
             assert response.status_code == 200
             data = response.json()
             assert data["level"] == 0
-            # Gamification profile returns a dict (not a model), keys stay snake_case
-            assert data["level_name"] == "Init"
+            # Fix 1: raw dicts now wrapped in camel_dict, keys are camelCase
+            assert data["levelName"] == "Init"
             assert data["xp"] == 50

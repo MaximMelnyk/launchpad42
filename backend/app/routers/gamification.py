@@ -7,6 +7,7 @@ from pydantic import Field
 
 from app.core.auth import get_uid
 from app.core.firebase import get_db
+from app.core.utils import camel_dict
 from app.models import CamelModel
 from app.services import gamification_service
 
@@ -35,7 +36,8 @@ async def gamification_profile(
 ) -> dict:
     """Get gamification profile: level, XP, streak, shields, phase."""
     try:
-        return await gamification_service.get_gamification_profile(uid, db)
+        result = await gamification_service.get_gamification_profile(uid, db)
+        return camel_dict(result)
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -49,7 +51,8 @@ async def achievements(
     db: AsyncClient = Depends(get_db),
 ) -> list[dict]:
     """Get all achievements with unlock status."""
-    return await gamification_service.get_achievements(uid, db)
+    result = await gamification_service.get_achievements(uid, db)
+    return [camel_dict(a) for a in result]
 
 
 @router.post("/drill/verify")
@@ -58,10 +61,11 @@ async def verify_drill(
     uid: str = Depends(get_uid),
     db: AsyncClient = Depends(get_db),
 ) -> dict:
-    """Verify drill attempt. Returns {correct, xp_earned}."""
-    return await gamification_service.process_drill(
+    """Verify drill attempt. Returns {correct, xpEarned}."""
+    result = await gamification_service.process_drill(
         uid, data.function_name, data.time_seconds, db
     )
+    return camel_dict(result)
 
 
 @router.post("/review")
@@ -70,11 +74,12 @@ async def submit_review(
     uid: str = Depends(get_uid),
     db: AsyncClient = Depends(get_db),
 ) -> dict:
-    """Submit review card answer. Returns {next_review, interval_days, xp_earned}."""
+    """Submit review card answer. Returns {nextReview, intervalDays, xpEarned}."""
     try:
-        return await gamification_service.process_review(
+        result = await gamification_service.process_review(
             uid, data.card_id, data.correct, db
         )
+        return camel_dict(result)
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -88,4 +93,5 @@ async def update_streak_route(
     db: AsyncClient = Depends(get_db),
 ) -> dict:
     """Update and return streak info."""
-    return await gamification_service.update_streak(uid, db)
+    result = await gamification_service.update_streak(uid, db)
+    return camel_dict(result)

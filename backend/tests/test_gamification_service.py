@@ -297,6 +297,7 @@ class TestDrill:
     async def test_drill_updates_pool(self):
         db = MockFirestoreDB()
         db.seed("users", TEST_UID, {"xp": 0})
+        db.seed("exercises", "ft_strlen", {"estimated_minutes": 15})
         db.seed("drill_pool", TEST_UID, {
             "uid": TEST_UID,
             "function_queue": ["ft_strlen", "ft_putchar"],
@@ -309,9 +310,22 @@ class TestDrill:
         assert pool["function_queue"] == ["ft_putchar", "ft_strlen"]
 
     @pytest.mark.asyncio
+    async def test_drill_unknown_function_returns_error(self):
+        db = MockFirestoreDB()
+        db.seed("users", TEST_UID, {"xp": 100})
+
+        result = await process_drill(TEST_UID, "nonexistent_func", 600, db)
+        assert result["correct"] is False
+        assert result["xp_earned"] == 0
+        assert result["error"] == "Unknown function"
+        # User XP should not change
+        assert db._collections["users"][TEST_UID]["xp"] == 100
+
+    @pytest.mark.asyncio
     async def test_drill_creates_pool_if_missing(self):
         db = MockFirestoreDB()
         db.seed("users", TEST_UID, {"xp": 0})
+        db.seed("exercises", "ft_strlen", {"estimated_minutes": 15})
 
         await process_drill(TEST_UID, "ft_strlen", 600, db)
 

@@ -32,6 +32,50 @@ async def verify_hash(hash_code: str, uid: str, exercise_id: str) -> bool:
     return bool(HASH_PATTERN.match(hash_code.lower()))
 
 
+async def start_exercise(
+    uid: str, exercise_id: str, db: AsyncClient
+) -> ExerciseProgress:
+    """Mark exercise as started when student opens it.
+
+    Sets started_at and status=IN_PROGRESS if not already started.
+    Only applies to exercises in LOCKED or AVAILABLE status (or not yet tracked).
+    """
+    doc_id = f"{uid}_{exercise_id}"
+    doc = await db.collection("exercise_progress").document(doc_id).get()
+    now = datetime.now(timezone.utc)
+
+    if doc.exists:
+        data = doc.to_dict()
+        current_status = data.get("status", ExerciseStatus.LOCKED.value)
+        # Only set started_at if not already in progress or completed
+        if current_status in (ExerciseStatus.LOCKED.value, ExerciseStatus.AVAILABLE.value):
+            await db.collection("exercise_progress").document(doc_id).set(
+                {
+                    "status": ExerciseStatus.IN_PROGRESS.value,
+                    "started_at": now,
+                    "updated_at": now,
+                },
+                merge=True,
+            )
+            data["status"] = ExerciseStatus.IN_PROGRESS.value
+            data["started_at"] = now
+            data["updated_at"] = now
+        data["uid"] = uid
+        data["exercise_id"] = exercise_id
+        return ExerciseProgress(**data)
+
+    # No progress doc yet — create one
+    progress_data = {
+        "uid": uid,
+        "exercise_id": exercise_id,
+        "status": ExerciseStatus.IN_PROGRESS.value,
+        "started_at": now,
+        "updated_at": now,
+    }
+    await db.collection("exercise_progress").document(doc_id).set(progress_data)
+    return ExerciseProgress(**progress_data)
+
+
 async def get_exercise_progress(
     uid: str, exercise_id: str, db: AsyncClient
 ) -> ExerciseProgress | None:
@@ -135,7 +179,8 @@ async def submit_exercise(
         "completed_at": now,
         "updated_at": now,
     }
-    if progress is None:
+    # Only set started_at if not already set (Fix 5: started on exercise open)
+    if progress is None or progress.started_at is None:
         progress_data["started_at"] = now
 
     await db.collection("exercise_progress").document(doc_id).set(

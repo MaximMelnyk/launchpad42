@@ -9,9 +9,8 @@ import type { Exercise, ExerciseProgress, ExerciseSubmission, ReviewCard, DrillP
 export interface TodayResponse {
   exercises: Exercise[];
   reviewCards: ReviewCard[];
-  drill: DrillPool;
+  drill: DrillPool | null;
   currentDay: number;
-  phase: string;
 }
 
 /** Response shape from GET /curriculum/exercises/{id} */
@@ -26,6 +25,7 @@ export interface SubmitExerciseResponse {
   bonuses: string[];
   levelUp: boolean;
   achievementsUnlocked: string[];
+  alreadyCompleted?: boolean;
 }
 
 export function getTodayExercises(): Promise<TodayResponse> {

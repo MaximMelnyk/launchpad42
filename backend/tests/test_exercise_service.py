@@ -8,6 +8,7 @@ from app.models.gamification import XP_BONUS_FIRST_ATTEMPT, XP_BONUS_NO_HINTS
 from app.services.exercise_service import (
     calculate_xp,
     get_exercise_progress,
+    start_exercise,
     verify_hash,
 )
 from tests.conftest import TEST_UID, MockFirestoreDB
@@ -171,3 +172,84 @@ class TestExerciseProgress:
         db = MockFirestoreDB()
         progress = await get_exercise_progress(TEST_UID, "nonexistent", db)
         assert progress is None
+
+
+# --- Start Exercise Tests (Fix 5) ---
+
+
+class TestStartExercise:
+    """Exercise start tracking — sets started_at on first open."""
+
+    @pytest.mark.asyncio
+    async def test_start_new_exercise(self):
+        """Opening an exercise with no progress creates IN_PROGRESS entry."""
+        db = MockFirestoreDB()
+        progress = await start_exercise(TEST_UID, "c00_ex00", db)
+
+        assert progress.status == ExerciseStatus.IN_PROGRESS
+        assert progress.started_at is not None
+
+    @pytest.mark.asyncio
+    async def test_start_locked_exercise(self):
+        """Opening a LOCKED exercise transitions to IN_PROGRESS."""
+        db = MockFirestoreDB()
+        db.seed("exercise_progress", f"{TEST_UID}_c00_ex00", {
+            "uid": TEST_UID,
+            "exercise_id": "c00_ex00",
+            "status": ExerciseStatus.LOCKED.value,
+            "attempts": 0,
+        })
+
+        progress = await start_exercise(TEST_UID, "c00_ex00", db)
+        assert progress.status == ExerciseStatus.IN_PROGRESS
+        assert progress.started_at is not None
+
+    @pytest.mark.asyncio
+    async def test_start_available_exercise(self):
+        """Opening an AVAILABLE exercise transitions to IN_PROGRESS."""
+        db = MockFirestoreDB()
+        db.seed("exercise_progress", f"{TEST_UID}_c00_ex00", {
+            "uid": TEST_UID,
+            "exercise_id": "c00_ex00",
+            "status": ExerciseStatus.AVAILABLE.value,
+            "attempts": 0,
+        })
+
+        progress = await start_exercise(TEST_UID, "c00_ex00", db)
+        assert progress.status == ExerciseStatus.IN_PROGRESS
+        assert progress.started_at is not None
+
+    @pytest.mark.asyncio
+    async def test_start_already_in_progress(self):
+        """Opening an IN_PROGRESS exercise does not change started_at."""
+        original_time = datetime(2026, 2, 26, 10, 0)
+        db = MockFirestoreDB()
+        db.seed("exercise_progress", f"{TEST_UID}_c00_ex00", {
+            "uid": TEST_UID,
+            "exercise_id": "c00_ex00",
+            "status": ExerciseStatus.IN_PROGRESS.value,
+            "started_at": original_time,
+            "attempts": 0,
+        })
+
+        progress = await start_exercise(TEST_UID, "c00_ex00", db)
+        assert progress.status == ExerciseStatus.IN_PROGRESS
+        assert progress.started_at == original_time
+
+    @pytest.mark.asyncio
+    async def test_start_completed_exercise(self):
+        """Opening a COMPLETED exercise does not change status."""
+        original_time = datetime(2026, 2, 26, 10, 0)
+        db = MockFirestoreDB()
+        db.seed("exercise_progress", f"{TEST_UID}_c00_ex00", {
+            "uid": TEST_UID,
+            "exercise_id": "c00_ex00",
+            "status": ExerciseStatus.COMPLETED.value,
+            "started_at": original_time,
+            "completed_at": datetime(2026, 2, 26, 10, 15),
+            "attempts": 1,
+        })
+
+        progress = await start_exercise(TEST_UID, "c00_ex00", db)
+        assert progress.status == ExerciseStatus.COMPLETED
+        assert progress.started_at == original_time

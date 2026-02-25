@@ -422,6 +422,11 @@ async def process_drill(
     now = datetime.now(timezone.utc)
     today_str = date.today().isoformat()
 
+    # Validate function_name refers to an actual exercise
+    ex_check = await db.collection("exercises").document(function_name).get()
+    if not ex_check.exists:
+        return {"correct": False, "xp_earned": 0, "error": "Unknown function"}
+
     # P1-5: Check if function was already drilled today
     drill_ref = db.collection("drill_pool").document(uid)
     drill_doc = await drill_ref.get()
