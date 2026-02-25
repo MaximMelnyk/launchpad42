@@ -19,7 +19,7 @@ set -euo pipefail
 # ---------------------------------------------------------------------------
 
 PROJECT_ID="launchpad42-prod"
-REGION="europe-west1"
+REGION="us-central1"
 SERVICE_NAME="launchpad-api"
 MEMORY="256Mi"
 CPU="1"

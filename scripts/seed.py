@@ -127,7 +127,7 @@ def seed_exercises(
         )
 
     stats = {"seeded": 0, "skipped": 0, "errors": 0}
-    collection = db.collection("exercises")
+    collection = db.collection("exercises") if db else None
 
     for phase_dir in phase_dirs:
         md_files = sorted(phase_dir.glob("*.md"))
@@ -183,7 +183,7 @@ def seed_vocab(
         )
 
     stats = {"seeded": 0, "skipped": 0, "errors": 0}
-    collection = db.collection("vocab")
+    collection = db.collection("vocab") if db else None
 
     for filepath in yaml_files:
         if not filepath.exists():
@@ -248,7 +248,7 @@ def seed_review_cards(
         )
 
     stats = {"seeded": 0, "skipped": 0, "errors": 0}
-    collection = db.collection("review_cards")
+    collection = db.collection("review_cards") if db else None
 
     for filepath in yaml_files:
         if not filepath.exists():

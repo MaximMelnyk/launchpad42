@@ -47,3 +47,6 @@ firebase-adminsdk*.json
 docs/
 CLAUDE.md
 LaunchPad42_Architect_Prompt.md
+
+# Terminal Paste Image folder
+.cp-images/
