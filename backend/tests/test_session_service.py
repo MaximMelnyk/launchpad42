@@ -1,6 +1,6 @@
 """Tests for session service — session lifecycle, day calculation, date validation."""
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from unittest.mock import patch
 
 import pytest
@@ -212,8 +212,8 @@ class TestWeeklyCompletedDays:
             "mood_start": "3",
             "exercises_completed": ["c00_ex00"],
             "xp_earned": 35,
-            "started_at": datetime.utcnow(),
-            "created_at": datetime.utcnow(),
+            "started_at": datetime.now(timezone.utc),
+            "created_at": datetime.now(timezone.utc),
             "drill_completed": False,
             "review_completed": False,
             "vocab_completed": False,

@@ -1,7 +1,7 @@
 """Exercise service — submission, XP calculation, hash verification, progress."""
 
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 
 import structlog
 from google.cloud.firestore_v1 import AsyncClient
@@ -99,12 +99,27 @@ async def submit_exercise(
     # Fetch existing progress
     progress = await get_exercise_progress(uid, exercise_id, db)
 
+    # P1-4: Prevent XP farming on re-submission of completed exercises
+    if progress and progress.status == ExerciseStatus.COMPLETED:
+        logger.info(
+            "Exercise already completed, no XP awarded",
+            uid=uid,
+            exercise_id=exercise_id,
+        )
+        return {
+            "xp_earned": 0,
+            "bonuses": [],
+            "level_up": False,
+            "achievements_unlocked": [],
+            "already_completed": True,
+        }
+
     # Calculate XP
     xp_earned, bonuses = await calculate_xp(
         exercise, progress, submission.hints_used
     )
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     doc_id = f"{uid}_{exercise_id}"
 
     # Update or create exercise_progress

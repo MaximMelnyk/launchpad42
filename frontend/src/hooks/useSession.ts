@@ -23,6 +23,7 @@ export function useStartSession() {
     mutationFn: (mood: string) => startSession(mood),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['session', 'current'] });
+      void qc.invalidateQueries({ queryKey: ['user'] });
     },
   });
 }
@@ -38,6 +39,7 @@ export function useEndSession() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['session', 'current'] });
       void qc.invalidateQueries({ queryKey: ['user'] });
+      void qc.invalidateQueries({ queryKey: ['gamification'] });
     },
   });
 }

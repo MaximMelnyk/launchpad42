@@ -43,20 +43,24 @@ export default function Timer({
     if (onExpire) onExpire();
   }, [onExpire]);
 
+  // Compute countdown values (safe even when limitMinutes is undefined)
+  const limitSeconds = limitMinutes !== undefined ? limitMinutes * 60 : 0;
+  const remainingSeconds = limitMinutes !== undefined
+    ? Math.max(0, limitSeconds - elapsedSeconds)
+    : 0;
+  const isExpired = limitMinutes !== undefined && remainingSeconds <= 0;
+
+  // Fire onExpire when countdown reaches 0 — always called (Rules of Hooks)
+  useEffect(() => {
+    if (isExpired) {
+      handleExpire();
+    }
+  }, [isExpired, handleExpire]);
+
   // Countdown mode
   if (limitMinutes !== undefined) {
-    const limitSeconds = limitMinutes * 60;
-    const remainingSeconds = Math.max(0, limitSeconds - elapsedSeconds);
     const percentage = limitSeconds > 0 ? (remainingSeconds / limitSeconds) * 100 : 0;
     const isWarning = percentage < 10;
-    const isExpired = remainingSeconds <= 0;
-
-    // Fire onExpire when timer reaches 0
-    useEffect(() => {
-      if (isExpired) {
-        handleExpire();
-      }
-    }, [isExpired, handleExpire]);
 
     return (
       <div

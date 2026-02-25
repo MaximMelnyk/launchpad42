@@ -53,8 +53,8 @@ async def get_dashboard(
     current_day = session_service.get_current_day()
 
     return {
-        "user": user.model_dump(),
-        "session": session.model_dump() if session else None,
+        "user": user.model_dump(by_alias=True),
+        "session": session.model_dump(by_alias=True) if session else None,
         "today": today_data,
         "gamification": gamification,
         "achievements": achievements,

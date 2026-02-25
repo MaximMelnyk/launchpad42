@@ -7,29 +7,25 @@ import {
   getTodayExercises,
   getExercise,
   submitExercise,
-  getExerciseProgress,
 } from '@/services/exerciseService';
-import type { Exercise, ExerciseProgress, ExerciseSubmission } from '@/types';
+import type {
+  TodayResponse,
+  ExerciseDetailResponse,
+  SubmitExerciseResponse,
+} from '@/services/exerciseService';
+import type { ExerciseSubmission } from '@/types';
 
 export function useTodayExercises() {
-  return useQuery<Exercise[]>({
+  return useQuery<TodayResponse>({
     queryKey: ['exercises', 'today'],
     queryFn: getTodayExercises,
   });
 }
 
 export function useExercise(id: string) {
-  return useQuery<Exercise>({
+  return useQuery<ExerciseDetailResponse>({
     queryKey: ['exercise', id],
     queryFn: () => getExercise(id),
-    enabled: !!id,
-  });
-}
-
-export function useExerciseProgress(id: string) {
-  return useQuery<ExerciseProgress>({
-    queryKey: ['exerciseProgress', id],
-    queryFn: () => getExerciseProgress(id),
     enabled: !!id,
   });
 }
@@ -37,15 +33,17 @@ export function useExerciseProgress(id: string) {
 export function useSubmitExercise() {
   const qc = useQueryClient();
   return useMutation<
-    ExerciseProgress,
+    SubmitExerciseResponse,
     Error,
     { id: string; data: ExerciseSubmission }
   >({
     mutationFn: ({ id, data }) => submitExercise(id, data),
     onSuccess: (_result, variables) => {
-      void qc.invalidateQueries({ queryKey: ['exerciseProgress', variables.id] });
+      void qc.invalidateQueries({ queryKey: ['exercise', variables.id] });
       void qc.invalidateQueries({ queryKey: ['exercises', 'today'] });
       void qc.invalidateQueries({ queryKey: ['user'] });
+      void qc.invalidateQueries({ queryKey: ['gamification'] });
+      void qc.invalidateQueries({ queryKey: ['achievements'] });
     },
   });
 }

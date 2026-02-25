@@ -1,6 +1,6 @@
 """Curriculum service — exercise listing, today's plan, prerequisites."""
 
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 
 import structlog
 from google.cloud.firestore_v1 import AsyncClient
@@ -80,7 +80,7 @@ async def get_today_exercises(uid: str, db: AsyncClient) -> dict:
 
     # Fetch review cards due today
     review_cards: list[dict] = []
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     review_ref = db.collection("review_cards")
     review_query = review_ref.where(
         filter=FieldFilter("next_review", "<=", now)

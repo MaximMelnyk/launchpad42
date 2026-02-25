@@ -3,23 +3,42 @@
  */
 
 import { api } from '@/services/apiClient';
-import type { Exercise, ExerciseProgress, ExerciseSubmission } from '@/types';
+import type { Exercise, ExerciseProgress, ExerciseSubmission, ReviewCard, DrillPool } from '@/types';
 
-export function getTodayExercises(): Promise<Exercise[]> {
-  return api.get<Exercise[]>('/curriculum/today');
+/** Response shape from GET /curriculum/today */
+export interface TodayResponse {
+  exercises: Exercise[];
+  reviewCards: ReviewCard[];
+  drill: DrillPool;
+  currentDay: number;
+  phase: string;
 }
 
-export function getExercise(id: string): Promise<Exercise> {
-  return api.get<Exercise>(`/curriculum/exercises/${id}`);
+/** Response shape from GET /curriculum/exercises/{id} */
+export interface ExerciseDetailResponse {
+  exercise: Exercise;
+  progress: ExerciseProgress | null;
+}
+
+/** Response shape from POST /curriculum/exercises/{id}/submit */
+export interface SubmitExerciseResponse {
+  xpEarned: number;
+  bonuses: string[];
+  levelUp: boolean;
+  achievementsUnlocked: string[];
+}
+
+export function getTodayExercises(): Promise<TodayResponse> {
+  return api.get<TodayResponse>('/curriculum/today');
+}
+
+export function getExercise(id: string): Promise<ExerciseDetailResponse> {
+  return api.get<ExerciseDetailResponse>(`/curriculum/exercises/${id}`);
 }
 
 export function submitExercise(
   id: string,
   data: ExerciseSubmission
-): Promise<ExerciseProgress> {
-  return api.post<ExerciseProgress>(`/exercise/${id}/submit`, data);
-}
-
-export function getExerciseProgress(id: string): Promise<ExerciseProgress> {
-  return api.get<ExerciseProgress>(`/exercise/${id}/progress`);
+): Promise<SubmitExerciseResponse> {
+  return api.post<SubmitExerciseResponse>(`/curriculum/exercises/${id}/submit`, data);
 }

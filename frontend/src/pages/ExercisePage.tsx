@@ -3,7 +3,7 @@
  */
 
 import { useParams, useNavigate } from 'react-router-dom';
-import { useExercise, useExerciseProgress } from '@/hooks/useExercises';
+import { useExercise } from '@/hooks/useExercises';
 import Layout from '@/components/Layout';
 import MarkdownViewer from '@/components/MarkdownViewer';
 import HashSubmitForm from '@/components/HashSubmitForm';
@@ -14,12 +14,13 @@ export default function ExercisePage(): JSX.Element {
   const navigate = useNavigate();
 
   const {
-    data: exercise,
+    data: detail,
     isLoading: exerciseLoading,
     error: exerciseError,
   } = useExercise(exerciseId ?? '');
 
-  const { data: progress } = useExerciseProgress(exerciseId ?? '');
+  const exercise = detail?.exercise;
+  const progress = detail?.progress ?? null;
 
   if (!exerciseId) {
     return (

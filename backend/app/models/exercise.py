@@ -1,8 +1,15 @@
 """Exercise and progress models for Firestore."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
-from pydantic import BaseModel, Field
+
+from pydantic import Field
+
+from app.models import CamelModel
+
+
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc)
 
 
 class ExerciseStatus(str, Enum):
@@ -13,7 +20,7 @@ class ExerciseStatus(str, Enum):
     SKIPPED = "skipped"
 
 
-class Exercise(BaseModel):
+class Exercise(CamelModel):
     """Exercise definition seeded from content/. Firestore: exercises/{exercise_id}"""
 
     id: str
@@ -32,7 +39,7 @@ class Exercise(BaseModel):
     order: int = 0
 
 
-class ExerciseProgress(BaseModel):
+class ExerciseProgress(CamelModel):
     """Per-user exercise progress. Firestore: exercise_progress/{uid}_{exercise_id}"""
 
     uid: str
@@ -45,10 +52,10 @@ class ExerciseProgress(BaseModel):
     first_attempt_pass: bool = False
     started_at: datetime | None = None
     completed_at: datetime | None = None
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=_utcnow)
 
 
-class ExerciseSubmission(BaseModel):
+class ExerciseSubmission(CamelModel):
     """Exercise completion submission from student."""
 
     hash_code: str

@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     # Telegram
     telegram_bot_token: str = ""
     telegram_webhook_path: str = "/telegram/webhook"
+    mother_access_code: str = ""
 
     # AI Tutor (DashScope / Qwen)
     tutor_api_key: str = ""

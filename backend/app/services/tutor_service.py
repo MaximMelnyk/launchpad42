@@ -1,6 +1,6 @@
 """AI Tutor service — Qwen API via httpx, rate-limited, Ukrainian."""
 
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 
 import httpx
 import structlog
@@ -63,7 +63,7 @@ async def _increment_usage(uid: str, db: AsyncClient) -> int:
             "uid": uid,
             "date": today_str,
             "count": new_count,
-            "updated_at": datetime.utcnow(),
+            "updated_at": datetime.now(timezone.utc),
         },
         merge=True,
     )

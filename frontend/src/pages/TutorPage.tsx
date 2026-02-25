@@ -19,7 +19,8 @@ interface ChatMessage {
 }
 
 export default function TutorPage(): JSX.Element {
-  const { data: exercises } = useTodayExercises();
+  const { data: todayData } = useTodayExercises();
+  const exercises = todayData?.exercises;
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -184,6 +185,7 @@ export default function TutorPage(): JSX.Element {
             placeholder="Напиши питання..."
             rows={2}
             disabled={tutorMutation.isPending}
+            aria-label="Повідомлення для тьютора"
           />
           <button
             className="btn btn-primary"

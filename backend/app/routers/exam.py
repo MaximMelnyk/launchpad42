@@ -3,24 +3,25 @@
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, status
 from google.cloud.firestore_v1 import AsyncClient
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from app.core.auth import get_uid
 from app.core.firebase import get_db
+from app.models import CamelModel
 from app.services import exam_service
 
 logger = structlog.get_logger()
 router = APIRouter()
 
 
-class ExamStartRequest(BaseModel):
+class ExamStartRequest(CamelModel):
     """Request to start an exam."""
 
     exam_type: str  # "gate" or "final"
     level: int = Field(ge=0, le=6)
 
 
-class ExamSubmitRequest(BaseModel):
+class ExamSubmitRequest(CamelModel):
     """Submit an exercise answer during exam."""
 
     exercise_id: str
@@ -36,7 +37,7 @@ async def start_exam_route(
     """Start a new exam. Checks cooldown and attempt limits first."""
     try:
         exam = await exam_service.start_exam(uid, data.exam_type, data.level, db)
-        return exam.model_dump()
+        return exam.model_dump(by_alias=True)
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -79,12 +80,11 @@ async def get_exam(
         )
 
 
-@router.get("/{exam_id}/cooldown")
+@router.get("/cooldown/{exam_type}")
 async def check_cooldown(
-    exam_id: str,
+    exam_type: str,
     uid: str = Depends(get_uid),
     db: AsyncClient = Depends(get_db),
 ) -> dict:
     """Check cooldown status for an exam type."""
-    # exam_id here is used as exam_type for cooldown check
-    return await exam_service.check_cooldown(uid, exam_id, db)
+    return await exam_service.check_cooldown(uid, exam_type, db)

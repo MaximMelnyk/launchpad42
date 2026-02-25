@@ -114,22 +114,19 @@ export default function ExamPage(): JSX.Element {
             {exam.exercises.map((exId, index) => {
               const isComplete = exam.completedExercises.includes(exId);
               return (
-                <div
+                <button
                   key={exId}
                   className={`${styles.examExercise} ${isComplete ? styles.exerciseComplete : ''} ${selectedExercise === exId ? styles.exerciseSelected : ''}`}
                   onClick={() => !isComplete && setSelectedExercise(exId)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !isComplete) setSelectedExercise(exId);
-                  }}
+                  disabled={isComplete}
+                  type="button"
                 >
                   <span className={styles.exerciseIndex}>{index + 1}</span>
                   <span className={styles.exerciseId}>{exId}</span>
                   <span className={styles.exerciseStatus}>
                     {isComplete ? '\u2705' : '\u2B1C'}
                   </span>
-                </div>
+                </button>
               );
             })}
           </div>

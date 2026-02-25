@@ -1,6 +1,6 @@
 """Gamification service — XP, levels, streaks, shields, achievements, drills, reviews."""
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 import structlog
 from google.cloud.firestore_v1 import AsyncClient
@@ -64,7 +64,7 @@ async def check_level_up(uid: str, db: AsyncClient) -> bool:
         await db.collection("users").document(uid).set(
             {
                 "level": next_level,
-                "updated_at": datetime.utcnow(),
+                "updated_at": datetime.now(timezone.utc),
             },
             merge=True,
         )
@@ -91,7 +91,7 @@ async def check_achievements(uid: str, db: AsyncClient) -> list[str]:
 
     user_data = user_doc.to_dict()
     newly_unlocked: list[str] = []
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
 
     # Load existing achievements
     existing: dict[str, bool] = {}
@@ -206,14 +206,49 @@ async def check_achievements(uid: str, db: AsyncClient) -> list[str]:
         )
     )
 
-    # SPEED_DEMON: placeholder — tracked at exercise submission time via separate logic
-    # We check if any exercise was completed in <50% estimated time
-    # For simplicity, we track this as a flag in progress documents
+    # SPEED_DEMON: Check if any exercise was completed in <50% of estimated time
+    # Query completed exercises and compare started_at vs completed_at vs estimated_minutes
+    speed_demon_met = False
+    speed_progress_query = db.collection("exercise_progress").where(
+        filter=FieldFilter("uid", "==", uid)
+    ).where(
+        filter=FieldFilter("status", "==", "completed")
+    )
+    async for prog_doc in speed_progress_query.stream():
+        prog_data = prog_doc.to_dict()
+        started_at = prog_data.get("started_at")
+        completed_at = prog_data.get("completed_at")
+        if not started_at or not completed_at:
+            continue
+
+        # Parse datetime if string
+        if isinstance(started_at, str):
+            started_at = datetime.fromisoformat(started_at)
+        if isinstance(completed_at, str):
+            completed_at = datetime.fromisoformat(completed_at)
+
+        ex_id = prog_data.get("exercise_id")
+        if not ex_id:
+            continue
+
+        # Fetch exercise estimated_minutes
+        ex_ref = await db.collection("exercises").document(ex_id).get()
+        if not ex_ref.exists:
+            continue
+        estimated_minutes = ex_ref.to_dict().get("estimated_minutes", 15)
+
+        actual_seconds = (completed_at - started_at).total_seconds()
+        threshold_seconds = estimated_minutes * 60 * 0.5  # 50% of estimated
+
+        if actual_seconds > 0 and actual_seconds < threshold_seconds:
+            speed_demon_met = True
+            break
+
     checks.append(
         (
             AchievementId.SPEED_DEMON,
-            False,  # Will be set by exercise_service when detected
-            0,
+            speed_demon_met,
+            1 if speed_demon_met else 0,
             1,
         )
     )
@@ -315,7 +350,7 @@ async def update_streak(uid: str, db: AsyncClient) -> dict:
             "weekly_completed_days": weekly_days,
             "streak_days": streak,
             "shields": shields,
-            "updated_at": datetime.utcnow(),
+            "updated_at": datetime.now(timezone.utc),
         },
         merge=True,
     )
@@ -384,8 +419,23 @@ async def process_drill(
 
     Update drill_pool last_drilled. Return {correct, xp_earned}.
     """
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     today_str = date.today().isoformat()
+
+    # P1-5: Check if function was already drilled today
+    drill_ref = db.collection("drill_pool").document(uid)
+    drill_doc = await drill_ref.get()
+
+    if drill_doc.exists:
+        drill_data = drill_doc.to_dict()
+        last_drilled = drill_data.get("last_drilled", {})
+        if last_drilled.get(function_name) == today_str:
+            logger.info(
+                "Drill already completed today, no XP awarded",
+                uid=uid,
+                function=function_name,
+            )
+            return {"correct": True, "xp_earned": 0, "already_drilled": True}
 
     # Fetch exercise for estimated time
     ex_doc = await db.collection("exercises").document(function_name).get()
@@ -400,9 +450,7 @@ async def process_drill(
     else:
         xp_earned = XP_BONUS_DRILL  # 10 XP for slow completion
 
-    # Update drill pool
-    drill_ref = db.collection("drill_pool").document(uid)
-    drill_doc = await drill_ref.get()
+    # Update drill pool — re-read not needed, we already have drill_doc
 
     if drill_doc.exists:
         drill_data = drill_doc.to_dict()
@@ -463,7 +511,7 @@ async def process_review(
     If incorrect: reset interval to 3.
     Update next_review date. Return {next_review, xp_earned}.
     """
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
 
     card_ref = db.collection("review_cards").document(card_id)
     card_doc = await card_ref.get()
@@ -472,6 +520,28 @@ async def process_review(
         raise ValueError(f"Review card not found: {card_id}")
 
     card_data = card_doc.to_dict()
+
+    # P1-5: Check if next_review is in the future (already reviewed, not due yet)
+    next_review_existing = card_data.get("next_review")
+    if next_review_existing:
+        if isinstance(next_review_existing, str):
+            next_review_existing = datetime.fromisoformat(next_review_existing)
+        # Make comparison tz-aware safe
+        if next_review_existing.tzinfo is None:
+            next_review_existing = next_review_existing.replace(tzinfo=timezone.utc)
+        if next_review_existing > now:
+            logger.info(
+                "Review card not due yet, no XP awarded",
+                uid=uid,
+                card_id=card_id,
+            )
+            return {
+                "next_review": next_review_existing.isoformat(),
+                "interval_days": card_data.get("interval_days", 3),
+                "xp_earned": 0,
+                "already_reviewed": True,
+            }
+
     current_interval = card_data.get("interval_days", 3)
     review_count = card_data.get("review_count", 0)
     correct_count = card_data.get("correct_count", 0)

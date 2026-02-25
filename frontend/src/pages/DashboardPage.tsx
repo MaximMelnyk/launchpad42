@@ -21,7 +21,8 @@ import styles from './DashboardPage.module.css';
 export default function DashboardPage(): JSX.Element {
   const navigate = useNavigate();
   const { data: user, isLoading: userLoading } = useUser();
-  const { data: exercises, isLoading: exercisesLoading } = useTodayExercises();
+  const { data: todayData, isLoading: exercisesLoading } = useTodayExercises();
+  const exercises = todayData?.exercises;
   const { data: session } = useCurrentSession();
   const { data: achievements } = useQuery<Achievement[]>({
     queryKey: ['achievements'],

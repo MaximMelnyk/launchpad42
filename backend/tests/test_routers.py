@@ -47,6 +47,7 @@ def app_with_mocks(mock_firebase_db):
         mock_settings.allowed_origins = ["http://localhost:5173"]
         mock_settings.telegram_bot_token = ""
         mock_settings.telegram_webhook_path = "/telegram/webhook"
+        mock_settings.mother_access_code = ""
         mock_settings.tutor_api_key = ""
         mock_settings.tutor_api_base = "https://test.api"
         mock_settings.tutor_model = "test-model"
@@ -101,20 +102,22 @@ class TestAuthEndpoints:
             assert response.status_code == 200
             data = response.json()
             assert data["uid"] == "test-uid-123"
-            assert data["display_name"] == "Maksym"
+            # CamelModel: response keys are camelCase
+            assert data["displayName"] == "Maksym"
             assert data["level"] == 0
 
     @pytest.mark.asyncio
     async def test_update_profile(self, app_with_mocks):
         transport = ASGITransport(app=app_with_mocks)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
+            # CamelModel accepts both camelCase and snake_case (populate_by_name=True)
             response = await client.put(
                 "/auth/profile",
-                json={"display_name": "New Name"},
+                json={"displayName": "New Name"},
             )
             assert response.status_code == 200
             data = response.json()
-            assert data["display_name"] == "New Name"
+            assert data["displayName"] == "New Name"
 
     @pytest.mark.asyncio
     async def test_update_profile_empty(self, app_with_mocks):
@@ -144,7 +147,8 @@ class TestSessionEndpoints:
             assert response.status_code == 200
             data = response.json()
             assert data["uid"] == "test-uid-123"
-            assert data["mood_start"] == "3"
+            # CamelModel: response keys are camelCase
+            assert data["moodStart"] == "3"
             assert data["date"] == date.today().isoformat()
 
     @pytest.mark.asyncio
@@ -160,9 +164,10 @@ class TestSessionEndpoints:
     async def test_end_session_no_active(self, app_with_mocks):
         transport = ASGITransport(app=app_with_mocks)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
+            # CamelModel accepts both camelCase and snake_case
             response = await client.post(
                 "/session/end",
-                json={"mood": "4", "duration_minutes": 120},
+                json={"mood": "4", "durationMinutes": 120},
             )
             assert response.status_code == 400
 
@@ -181,5 +186,6 @@ class TestGamificationEndpoints:
             assert response.status_code == 200
             data = response.json()
             assert data["level"] == 0
+            # Gamification profile returns a dict (not a model), keys stay snake_case
             assert data["level_name"] == "Init"
             assert data["xp"] == 50

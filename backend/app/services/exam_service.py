@@ -1,7 +1,7 @@
 """Exam service — gate exams, final simulations, cooldowns, scoring."""
 
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import structlog
 from google.cloud.firestore_v1 import AsyncClient
@@ -50,7 +50,7 @@ async def check_cooldown(
 
     Return {can_start, reason, next_available}
     """
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     cutoff_14d = now - timedelta(days=ATTEMPT_PERIOD_DAYS)
 
     # Query recent exams
@@ -84,20 +84,23 @@ async def check_cooldown(
                     }
 
     # Check attempt limit (3 per 14 days)
-    recent_count = 0
+    recent_starts: list[datetime] = []
     for exam_data in recent_exams:
         started = exam_data.get("started_at")
         if started:
             if isinstance(started, str):
                 started = datetime.fromisoformat(started)
             if started > cutoff_14d:
-                recent_count += 1
+                recent_starts.append(started)
 
-    if recent_count >= MAX_ATTEMPTS_PER_PERIOD:
+    if len(recent_starts) >= MAX_ATTEMPTS_PER_PERIOD:
+        # P3-1: next_available = oldest attempt in window + 14 days
+        oldest_in_window = min(recent_starts)
+        next_available = oldest_in_window + timedelta(days=ATTEMPT_PERIOD_DAYS)
         return {
             "can_start": False,
             "reason": f"Maximum {MAX_ATTEMPTS_PER_PERIOD} attempts per {ATTEMPT_PERIOD_DAYS} days reached",
-            "next_available": (cutoff_14d + timedelta(days=ATTEMPT_PERIOD_DAYS)).isoformat(),
+            "next_available": next_available.isoformat(),
         }
 
     return {"can_start": True, "reason": None, "next_available": None}
@@ -150,7 +153,7 @@ async def start_exam(
 
     # Create exam
     exam_id = str(uuid.uuid4())[:12]
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
 
     exam = Exam(
         uid=uid,
@@ -208,7 +211,7 @@ async def submit_exam_exercise(
         if isinstance(started_at, str):
             started_at = datetime.fromisoformat(started_at)
         time_limit = timedelta(minutes=exam_data.get("time_limit_minutes", 240))
-        if datetime.utcnow() > started_at + time_limit:
+        if datetime.now(timezone.utc) > started_at + time_limit:
             # Time expired — auto-fail
             await _finalize_exam(doc_id, exam_data, db)
             raise ValueError("Exam time has expired")
@@ -239,7 +242,7 @@ async def submit_exam_exercise(
     # Check if all exercises are done
     exam_completed = len(completed) >= total
     if exam_completed:
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         if score >= PASS_THRESHOLD:
             update_data["status"] = ExamStatus.PASSED.value
             # Award bonus XP
@@ -282,7 +285,7 @@ async def _finalize_exam(
     completed = exam_data.get("completed_exercises", [])
     total = len(exercises)
     score = len(completed) / total if total > 0 else 0.0
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
 
     if score >= PASS_THRESHOLD:
         status = ExamStatus.PASSED.value
@@ -324,7 +327,7 @@ async def get_exam_status(
             started_at = datetime.fromisoformat(started_at)
         time_limit = timedelta(minutes=exam_data.get("time_limit_minutes", 240))
         end_time = started_at + time_limit
-        remaining = end_time - datetime.utcnow()
+        remaining = end_time - datetime.now(timezone.utc)
         time_remaining_minutes = max(0, int(remaining.total_seconds() / 60))
 
         # Auto-finalize if time expired

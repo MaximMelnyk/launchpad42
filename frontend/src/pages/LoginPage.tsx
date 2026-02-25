@@ -2,7 +2,7 @@
  * Login page — Google Sign-In entry point.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import styles from './LoginPage.module.css';
@@ -13,10 +13,12 @@ export default function LoginPage(): JSX.Element {
   const [signingIn, setSigningIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Redirect if already authenticated
-  if (!loading && user) {
-    navigate('/', { replace: true });
-  }
+  // Redirect if already authenticated — in useEffect, not during render
+  useEffect(() => {
+    if (!loading && user) {
+      navigate('/', { replace: true });
+    }
+  }, [user, loading, navigate]);
 
   const handleSignIn = async (): Promise<void> => {
     setSigningIn(true);

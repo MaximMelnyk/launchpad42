@@ -4,12 +4,12 @@
 
 import { useState } from 'react';
 import { useSubmitExercise } from '@/hooks/useExercises';
-import type { ExerciseProgress } from '@/types';
+import type { SubmitExerciseResponse } from '@/services/exerciseService';
 import styles from './HashSubmitForm.module.css';
 
 interface HashSubmitFormProps {
   exerciseId: string;
-  onSuccess?: (result: ExerciseProgress) => void;
+  onSuccess?: (result: SubmitExerciseResponse) => void;
 }
 
 const HASH_REGEX = /^[a-fA-F0-9]{8}$/;

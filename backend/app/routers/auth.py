@@ -1,6 +1,6 @@
 """Auth router — user profile management."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -55,11 +55,11 @@ async def update_profile(
             detail="No fields to update",
         )
 
-    update_data["updated_at"] = datetime.utcnow()
+    update_data["updated_at"] = datetime.now(timezone.utc)
 
     # Handle pause mode
     if data.pause_mode is True:
-        update_data["pause_started_at"] = datetime.utcnow()
+        update_data["pause_started_at"] = datetime.now(timezone.utc)
     elif data.pause_mode is False:
         update_data["pause_started_at"] = None
 

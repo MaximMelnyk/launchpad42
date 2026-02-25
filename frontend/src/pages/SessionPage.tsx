@@ -2,7 +2,7 @@
  * Session page — daily session flow: mood check-in, exercises, wrap-up.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCurrentSession, useStartSession, useEndSession } from '@/hooks/useSession';
 import { useTodayExercises } from '@/hooks/useExercises';
@@ -12,31 +12,37 @@ import Timer from '@/components/Timer';
 import ExerciseCard from '@/components/ExerciseCard';
 import styles from './SessionPage.module.css';
 
-type SessionPhase = 'mood-start' | 'active' | 'mood-end' | 'summary';
+type UiPhase = 'start' | 'active' | 'ending' | 'summary';
 
 export default function SessionPage(): JSX.Element {
   const navigate = useNavigate();
   const { data: session, isLoading: sessionLoading } = useCurrentSession();
-  const { data: exercises } = useTodayExercises();
+  const { data: todayData, isLoading: exercisesLoading } = useTodayExercises();
+  const exercises = todayData?.exercises;
   const startMutation = useStartSession();
   const endMutation = useEndSession();
 
   const [startMood, setStartMood] = useState<string>('');
   const [endMood, setEndMood] = useState<string>('');
-  const [phase, setPhase] = useState<SessionPhase>('mood-start');
+  const [uiPhase, setUiPhase] = useState<UiPhase>('start');
 
-  // Determine current phase based on session state
-  const currentPhase: SessionPhase = (() => {
-    if (session && !session.finishedAt) return 'active';
-    if (session && session.finishedAt) return 'summary';
-    return phase;
-  })();
+  // Sync UI phase with server state on load
+  useEffect(() => {
+    if (sessionLoading) return;
+    if (session && !session.finishedAt) {
+      setUiPhase('active');
+    } else if (session && session.finishedAt) {
+      setUiPhase('summary');
+    } else {
+      setUiPhase('start');
+    }
+  }, [session, sessionLoading]);
 
   const handleStartSession = (): void => {
     if (!startMood) return;
     startMutation.mutate(startMood, {
       onSuccess: () => {
-        setPhase('active');
+        setUiPhase('active');
       },
     });
   };
@@ -47,7 +53,7 @@ export default function SessionPage(): JSX.Element {
       { mood: endMood },
       {
         onSuccess: () => {
-          setPhase('summary');
+          setUiPhase('summary');
         },
       }
     );
@@ -65,7 +71,7 @@ export default function SessionPage(): JSX.Element {
     <Layout>
       <div className={styles.page}>
         {/* Phase: Mood Start */}
-        {currentPhase === 'mood-start' && (
+        {uiPhase === 'start' && (
           <div className={styles.moodPhase}>
             <h1 className={styles.heading}>Нова сесія</h1>
             <p className={styles.subtitle}>
@@ -91,7 +97,7 @@ export default function SessionPage(): JSX.Element {
         )}
 
         {/* Phase: Active session */}
-        {currentPhase === 'active' && session && (
+        {uiPhase === 'active' && session && (
           <div className={styles.activePhase}>
             <div className={styles.sessionHeader}>
               <h1 className={styles.heading}>Активна сесія</h1>
@@ -125,7 +131,10 @@ export default function SessionPage(): JSX.Element {
             {/* Exercises */}
             <section className={styles.exerciseSection}>
               <h2 className={styles.sectionTitle}>Вправи</h2>
-              {exercises && exercises.length > 0 ? (
+              {exercisesLoading && (
+                <p className={styles.loading}>Завантаження вправ...</p>
+              )}
+              {!exercisesLoading && exercises && exercises.length > 0 ? (
                 <div className={styles.exerciseList}>
                   {exercises.map((ex) => {
                     const isCompleted = session.exercisesCompleted.includes(ex.id);
@@ -140,7 +149,9 @@ export default function SessionPage(): JSX.Element {
                   })}
                 </div>
               ) : (
-                <p className={styles.empty}>Немає вправ на сьогодні</p>
+                !exercisesLoading && (
+                  <p className={styles.empty}>Немає вправ на сьогодні</p>
+                )
               )}
             </section>
 
@@ -154,10 +165,10 @@ export default function SessionPage(): JSX.Element {
               </span>
             </div>
 
-            {/* End session */}
+            {/* End session — transitions to ending UI phase */}
             <button
               className="btn btn-secondary"
-              onClick={() => setPhase('mood-end')}
+              onClick={() => setUiPhase('ending')}
               type="button"
             >
               Завершити сесію
@@ -166,7 +177,7 @@ export default function SessionPage(): JSX.Element {
         )}
 
         {/* Phase: Mood End */}
-        {currentPhase === 'mood-end' && (
+        {uiPhase === 'ending' && (
           <div className={styles.moodPhase}>
             <h1 className={styles.heading}>Завершення сесії</h1>
             <p className={styles.subtitle}>
@@ -183,7 +194,7 @@ export default function SessionPage(): JSX.Element {
             <div className={styles.endActions}>
               <button
                 className="btn btn-secondary"
-                onClick={() => setPhase('active')}
+                onClick={() => setUiPhase('active')}
                 type="button"
               >
                 Назад
@@ -201,7 +212,7 @@ export default function SessionPage(): JSX.Element {
         )}
 
         {/* Phase: Summary */}
-        {currentPhase === 'summary' && session && (
+        {uiPhase === 'summary' && session && (
           <div className={styles.summary}>
             <h1 className={styles.heading}>Сесію завершено!</h1>
 

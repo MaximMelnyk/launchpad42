@@ -1,8 +1,11 @@
 """Gamification models: levels, achievements, XP, streaks, SRS, exams."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
-from pydantic import BaseModel, Field
+
+from pydantic import Field
+
+from app.models import CamelModel
 
 
 # --- Level System ---
@@ -72,7 +75,7 @@ ACHIEVEMENT_NAMES_UK: dict[str, str] = {
 }
 
 
-class Achievement(BaseModel):
+class Achievement(CamelModel):
     """Achievement state. Firestore: achievements/{uid}_{achievement_id}"""
 
     uid: str
@@ -85,16 +88,20 @@ class Achievement(BaseModel):
 
 # --- Drill & Review ---
 
-class DrillPool(BaseModel):
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+class DrillPool(CamelModel):
     """Drill rotation pool. Firestore: drill_pool/{uid}"""
 
     uid: str
     function_queue: list[str] = Field(default_factory=list)  # exercise IDs to drill
     last_drilled: dict[str, str] = Field(default_factory=dict)  # exercise_id -> date
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=_utcnow)
 
 
-class ReviewCard(BaseModel):
+class ReviewCard(CamelModel):
     """SRS flashcard (SM-2 lite). Firestore: review_cards/{card_id}"""
 
     id: str
@@ -109,7 +116,7 @@ class ReviewCard(BaseModel):
     correct_count: int = 0
 
 
-class Vocab(BaseModel):
+class Vocab(CamelModel):
     """French tech vocabulary. Firestore: vocab/{term_id}"""
 
     id: str
@@ -138,7 +145,7 @@ class ExamStatus(str, Enum):
     PARTIAL = "partial"  # 60-79% score
 
 
-class Exam(BaseModel):
+class Exam(CamelModel):
     """Exam attempt. Firestore: exams/{uid}_{exam_id}"""
 
     uid: str
@@ -162,10 +169,10 @@ class TelegramRole(str, Enum):
     MOTHER = "mother"
 
 
-class TelegramLink(BaseModel):
+class TelegramLink(CamelModel):
     """Telegram chat link. Firestore: telegram_links/{chat_id}"""
 
     chat_id: int
     role: TelegramRole
     display_name: str = ""
-    linked_at: datetime = Field(default_factory=datetime.utcnow)
+    linked_at: datetime = Field(default_factory=_utcnow)

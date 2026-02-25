@@ -1,9 +1,11 @@
 """AI Tutor request/response models."""
 
-from pydantic import BaseModel, Field
+from pydantic import Field
+
+from app.models import CamelModel
 
 
-class TutorRequest(BaseModel):
+class TutorRequest(CamelModel):
     """Student message to AI tutor."""
 
     message: str = Field(max_length=2000)
@@ -11,7 +13,7 @@ class TutorRequest(BaseModel):
     code: str | None = Field(default=None, max_length=10000)
 
 
-class TutorResponse(BaseModel):
+class TutorResponse(CamelModel):
     """AI tutor response."""
 
     reply: str

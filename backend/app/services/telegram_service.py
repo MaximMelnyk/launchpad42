@@ -1,6 +1,6 @@
 """Telegram bot service — student/mother commands, webhook handling, weekly reports."""
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 import structlog
 from google.cloud.firestore_v1 import AsyncClient
@@ -62,6 +62,23 @@ async def _get_role(chat_id: int, db: AsyncClient) -> TelegramRole | None:
         return None
 
 
+async def _is_linked(chat_id: int, db: AsyncClient) -> bool:
+    """Check if chat_id is linked in telegram_links collection."""
+    doc = await db.collection("telegram_links").document(str(chat_id)).get()
+    return doc.exists
+
+
+async def _require_linked(update: Update, db: AsyncClient) -> bool:
+    """Verify chat is linked. If not, reply with instructions and return False."""
+    chat_id = update.effective_chat.id
+    if not await _is_linked(chat_id, db):
+        await update.message.reply_text(
+            "Спочатку зв'яжіть акаунт через /start"
+        )
+        return False
+    return True
+
+
 async def _get_student_uid(db: AsyncClient) -> str | None:
     """Get the single student's UID (1-user platform)."""
     query = db.collection("telegram_links").where(
@@ -86,7 +103,10 @@ async def _get_student_uid(db: AsyncClient) -> str | None:
 
 
 async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Welcome message, link telegram_chat_id to user."""
+    """Welcome message, link telegram_chat_id to user.
+
+    Mother must provide access code: /start mother CODE
+    """
     db = await _get_db_from_context(context)
     if db is None:
         await update.message.reply_text("Bot is initializing, try again later.")
@@ -111,47 +131,44 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             )
         return
 
-    # Offer role selection
-    keyboard = [
-        [
-            InlineKeyboardButton("Студент", callback_data="role_student"),
-            InlineKeyboardButton("Спостерігач (мама)", callback_data="role_mother"),
-        ]
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text(
-        f"Привіт, {user_name}! Хто ти?",
-        reply_markup=reply_markup,
-    )
-
-
-async def _handle_role_callback(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
-) -> None:
-    """Handle role selection callback."""
-    db = await _get_db_from_context(context)
-    if db is None:
-        return
-
-    query = update.callback_query
-    await query.answer()
-
-    chat_id = update.effective_chat.id
-    data = query.data
-
-    if data == "role_student":
-        role = TelegramRole.STUDENT
-        # Link to user document
-        uid = await _get_student_uid(db)
-        if uid:
-            await db.collection("users").document(uid).set(
-                {"telegram_chat_id": chat_id, "updated_at": datetime.utcnow()},
-                merge=True,
+    # Parse command arguments for mother access code: /start mother CODE
+    args = context.args or []
+    if len(args) >= 2 and args[0].lower() == "mother":
+        provided_code = args[1]
+        if not settings.mother_access_code:
+            await update.message.reply_text(
+                "Код доступу для спостерігача не налаштовано. "
+                "Зверніться до адміністратора."
             )
-    elif data == "role_mother":
-        role = TelegramRole.MOTHER
-    else:
+            return
+        if provided_code != settings.mother_access_code:
+            await update.message.reply_text(
+                "Невірний код доступу."
+            )
+            return
+
+        # Valid mother access code — link as mother
+        link = TelegramLink(
+            chat_id=chat_id,
+            role=TelegramRole.MOTHER,
+            display_name=update.effective_user.first_name or "",
+        )
+        await db.collection("telegram_links").document(str(chat_id)).set(
+            link.model_dump()
+        )
+        await update.message.reply_text(
+            "Ви підключені як спостерігач. Використовуйте /week для тижневого звіту."
+        )
         return
+
+    # Default: link as student (no access code needed)
+    role = TelegramRole.STUDENT
+    uid = await _get_student_uid(db)
+    if uid:
+        await db.collection("users").document(uid).set(
+            {"telegram_chat_id": chat_id, "updated_at": datetime.now(timezone.utc)},
+            merge=True,
+        )
 
     link = TelegramLink(
         chat_id=chat_id,
@@ -162,14 +179,10 @@ async def _handle_role_callback(
         link.model_dump()
     )
 
-    if role == TelegramRole.STUDENT:
-        await query.edit_message_text(
-            "Ти підключений як студент! Використовуй /today щоб побачити план на сьогодні."
-        )
-    else:
-        await query.edit_message_text(
-            "Ви підключені як спостерігач. Використовуйте /week для тижневого звіту."
-        )
+    await update.message.reply_text(
+        f"Привіт, {user_name}! Ти підключений як студент.\n"
+        f"Доступні команди: /today, /progress, /drill, /mood"
+    )
 
 
 async def cmd_today(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -177,6 +190,10 @@ async def cmd_today(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     db = await _get_db_from_context(context)
     if db is None:
         await update.message.reply_text("Bot is initializing.")
+        return
+
+    # P1-3: Verify chat is linked
+    if not await _require_linked(update, db):
         return
 
     chat_id = update.effective_chat.id
@@ -232,6 +249,10 @@ async def cmd_progress(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         await update.message.reply_text("Bot is initializing.")
         return
 
+    # P1-3: Verify chat is linked
+    if not await _require_linked(update, db):
+        return
+
     uid = await _get_student_uid(db)
     if not uid:
         await update.message.reply_text("Студент ще не зареєстрований.")
@@ -254,14 +275,14 @@ async def cmd_progress(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     # Progress bar
     progress_pct = min(100, int((xp / next_xp) * 100)) if next_xp > 0 else 100
     bar_filled = progress_pct // 10
-    bar = "█" * bar_filled + "░" * (10 - bar_filled)
+    bar = "=" * bar_filled + "-" * (10 - bar_filled)
 
     text = (
         f"Рівень {level}: {level_name}\n"
         f"XP: {xp}/{next_xp} [{bar}] {progress_pct}%\n"
         f"Фаза: {phase}\n"
         f"Серія: {streak} днів\n"
-        f"Щити: {'🛡' * shields if shields else 'немає'}"
+        f"Щити: {shields}/3"
     )
 
     await update.message.reply_text(text)
@@ -272,6 +293,10 @@ async def cmd_drill(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     db = await _get_db_from_context(context)
     if db is None:
         await update.message.reply_text("Bot is initializing.")
+        return
+
+    # P1-3: Verify chat is linked
+    if not await _require_linked(update, db):
         return
 
     uid = await _get_student_uid(db)
@@ -311,6 +336,10 @@ async def cmd_hint(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await update.message.reply_text("Bot is initializing.")
         return
 
+    # P1-3: Verify chat is linked
+    if not await _require_linked(update, db):
+        return
+
     uid = await _get_student_uid(db)
     if not uid:
         await update.message.reply_text("Студент ще не зареєстрований.")
@@ -331,6 +360,15 @@ async def cmd_hint(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 async def cmd_skip(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Skip current exercise."""
+    db = await _get_db_from_context(context)
+    if db is None:
+        await update.message.reply_text("Bot is initializing.")
+        return
+
+    # P1-3: Verify chat is linked
+    if not await _require_linked(update, db):
+        return
+
     await update.message.reply_text(
         "Пропуск вправи реєструється через платформу (веб-інтерфейс).\n"
         "Пропущені вправи можна повернути пізніше."
@@ -339,6 +377,15 @@ async def cmd_skip(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 async def cmd_mood(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Mood check with inline keyboard (5 moods)."""
+    db = await _get_db_from_context(context)
+    if db is None:
+        await update.message.reply_text("Bot is initializing.")
+        return
+
+    # P1-3: Verify chat is linked
+    if not await _require_linked(update, db):
+        return
+
     keyboard = [
         [
             InlineKeyboardButton("1 Чудово", callback_data="mood_1"),
@@ -401,6 +448,10 @@ async def mother_week(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         await update.message.reply_text("Bot is initializing.")
         return
 
+    # P1-3: Verify chat is linked
+    if not await _require_linked(update, db):
+        return
+
     chat_id = update.effective_chat.id
     role = await _get_role(chat_id, db)
     if role != TelegramRole.MOTHER:
@@ -421,6 +472,10 @@ async def mother_streak(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     db = await _get_db_from_context(context)
     if db is None:
         await update.message.reply_text("Bot is initializing.")
+        return
+
+    # P1-3: Verify chat is linked
+    if not await _require_linked(update, db):
         return
 
     chat_id = update.effective_chat.id
@@ -467,6 +522,10 @@ async def mother_level(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         await update.message.reply_text("Bot is initializing.")
         return
 
+    # P1-3: Verify chat is linked
+    if not await _require_linked(update, db):
+        return
+
     chat_id = update.effective_chat.id
     role = await _get_role(chat_id, db)
     if role != TelegramRole.MOTHER:
@@ -492,7 +551,7 @@ async def mother_level(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
     progress_pct = min(100, int((xp / next_xp) * 100)) if next_xp > 0 else 100
     bar_filled = progress_pct // 10
-    bar = "█" * bar_filled + "░" * (10 - bar_filled)
+    bar = "=" * bar_filled + "-" * (10 - bar_filled)
 
     await update.message.reply_text(
         f"Рівень {level}: {level_name}\n"
@@ -537,7 +596,7 @@ async def _generate_weekly_report(uid: str, db: AsyncClient) -> str:
     phase = u.get("phase", "phase0")
 
     report = (
-        f"Тижневий звіт ({monday.isoformat()} — {today.isoformat()}):\n\n"
+        f"Тижневий звіт ({monday.isoformat()} -- {today.isoformat()}):\n\n"
         f"Сесій проведено: {sessions_count}/7\n"
         f"Вправ виконано: {total_exercises}\n"
         f"XP зароблено: {total_xp}\n"
@@ -639,7 +698,6 @@ def setup_bot(token: str) -> Application:
     app.add_handler(CommandHandler("level", mother_level))
 
     # Callback handlers
-    app.add_handler(CallbackQueryHandler(_handle_role_callback, pattern=r"^role_"))
     app.add_handler(CallbackQueryHandler(_handle_mood_callback, pattern=r"^mood_"))
 
     return app

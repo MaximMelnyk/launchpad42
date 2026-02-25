@@ -1,6 +1,6 @@
 """Session service — daily session lifecycle: start, end, current day calculation."""
 
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 
 import structlog
 from google.cloud.firestore_v1 import AsyncClient
@@ -43,7 +43,7 @@ async def start_session(
     """
     today_str = date.today().isoformat()
     doc_id = f"{uid}_{today_str}"
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
 
     # Check if session already exists
     existing = await db.collection("sessions").document(doc_id).get()
@@ -85,7 +85,7 @@ async def end_session(
     """
     today_str = date.today().isoformat()
     doc_id = f"{uid}_{today_str}"
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
 
     session_doc = await db.collection("sessions").document(doc_id).get()
     if not session_doc.exists:

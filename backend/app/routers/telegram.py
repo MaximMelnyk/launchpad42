@@ -1,7 +1,9 @@
 """Telegram webhook router — receives updates from Telegram Bot API."""
 
+import hashlib
+
 import structlog
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, HTTPException, Header, Request, status
 
 from app.core.config import settings
 from app.core.firebase import get_db
@@ -10,8 +12,32 @@ logger = structlog.get_logger()
 router = APIRouter()
 
 
+def _get_webhook_secret_token() -> str:
+    """Derive webhook secret token from bot token hash (first 32 chars)."""
+    if not settings.telegram_bot_token:
+        return ""
+    return hashlib.sha256(settings.telegram_bot_token.encode()).hexdigest()[:32]
+
+
+def _verify_scheduler_secret(header_value: str | None) -> None:
+    """Verify X-Scheduler-Secret header matches telegram_bot_token."""
+    if not settings.telegram_bot_token:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Bot not configured",
+        )
+    if header_value != settings.telegram_bot_token:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Invalid scheduler secret",
+        )
+
+
 @router.post("/webhook")
-async def telegram_webhook(request: Request) -> dict:
+async def telegram_webhook(
+    request: Request,
+    x_telegram_bot_api_secret_token: str | None = Header(default=None),
+) -> dict:
     """Parse webhook update and process via telegram_service."""
     db = get_db()
 
@@ -20,6 +46,14 @@ async def telegram_webhook(request: Request) -> dict:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Telegram bot not configured",
+        )
+
+    # Verify webhook secret token (P1-1)
+    expected_secret = _get_webhook_secret_token()
+    if expected_secret and x_telegram_bot_api_secret_token != expected_secret:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Invalid webhook secret token",
         )
 
     # Get bot app from FastAPI state
@@ -51,8 +85,15 @@ async def telegram_webhook(request: Request) -> dict:
 
 
 @router.post("/weekly-report")
-async def trigger_weekly_report(request: Request) -> dict:
-    """Trigger weekly report (called by Cloud Scheduler)."""
+async def trigger_weekly_report(
+    request: Request,
+    x_scheduler_secret: str | None = Header(default=None),
+) -> dict:
+    """Trigger weekly report (called by Cloud Scheduler).
+
+    Requires X-Scheduler-Secret header matching telegram_bot_token.
+    """
+    _verify_scheduler_secret(x_scheduler_secret)
     db = get_db()
 
     try:
@@ -69,8 +110,15 @@ async def trigger_weekly_report(request: Request) -> dict:
 
 
 @router.post("/student-preview")
-async def trigger_student_preview(request: Request) -> dict:
-    """Trigger student preview (called by Cloud Scheduler)."""
+async def trigger_student_preview(
+    request: Request,
+    x_scheduler_secret: str | None = Header(default=None),
+) -> dict:
+    """Trigger student preview (called by Cloud Scheduler).
+
+    Requires X-Scheduler-Secret header matching telegram_bot_token.
+    """
+    _verify_scheduler_secret(x_scheduler_secret)
     db = get_db()
 
     try:

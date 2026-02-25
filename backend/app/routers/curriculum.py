@@ -41,8 +41,8 @@ async def get_exercise(
     progress = await exercise_service.get_exercise_progress(uid, exercise_id, db)
 
     return {
-        "exercise": exercise.model_dump(),
-        "progress": progress.model_dump() if progress else None,
+        "exercise": exercise.model_dump(by_alias=True),
+        "progress": progress.model_dump(by_alias=True) if progress else None,
     }
 
 
@@ -67,8 +67,8 @@ async def get_phase(
         progress = await exercise_service.get_exercise_progress(uid, ex.id, db)
         result.append(
             {
-                "exercise": ex.model_dump(),
-                "progress": progress.model_dump() if progress else None,
+                "exercise": ex.model_dump(by_alias=True),
+                "progress": progress.model_dump(by_alias=True) if progress else None,
             }
         )
 

@@ -3,24 +3,25 @@
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, status
 from google.cloud.firestore_v1 import AsyncClient
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from app.core.auth import get_uid
 from app.core.firebase import get_db
+from app.models import CamelModel
 from app.services import gamification_service
 
 logger = structlog.get_logger()
 router = APIRouter()
 
 
-class DrillVerifyRequest(BaseModel):
+class DrillVerifyRequest(CamelModel):
     """Drill verification request."""
 
     function_name: str
     time_seconds: int = Field(ge=0)
 
 
-class ReviewSubmitRequest(BaseModel):
+class ReviewSubmitRequest(CamelModel):
     """Review card submission."""
 
     card_id: str
