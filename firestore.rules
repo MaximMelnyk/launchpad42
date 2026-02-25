@@ -12,7 +12,7 @@ service cloud.firestore {
       allow create: if request.auth != null && request.auth.uid == uid;
       allow update: if request.auth != null && request.auth.uid == uid
         && (!request.resource.data.diff(resource.data).affectedKeys()
-            .hasAny(['level', 'xp', 'streak_days', 'shields', 'current_day', 'phase', 'weekly_completed_days']));
+            .hasAny(['level', 'xp', 'streak_days', 'shields', 'current_day', 'phase', 'weekly_completed_days', 'telegram_chat_id']));
     }
 
     // Exercise progress: uid-scoped via field check
@@ -60,9 +60,20 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // Drill pool: uid-scoped
+    // Drill pool: read-only for client, writes via server Admin SDK only
     match /drill_pool/{uid} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    // Tutor usage counters: server-only (Admin SDK)
+    match /tutor_usage/{docId} {
+      allow read, write: if false;
+    }
+
+    // Tutor conversation history: server-only (Admin SDK)
+    match /tutor_history/{uid} {
+      allow read, write: if false;
     }
 
     // Exams: uid-scoped via field check (server manages, client reads)
@@ -74,6 +85,11 @@ service cloud.firestore {
 
     // Telegram links: server-only (no client access)
     match /telegram_links/{chatId} {
+      allow read, write: if false;
+    }
+
+    // Telegram rate limit: server-only (brute-force protection)
+    match /telegram_rate_limit/{chatId} {
       allow read, write: if false;
     }
   }

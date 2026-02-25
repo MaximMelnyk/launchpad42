@@ -96,9 +96,12 @@ async def _get_student_profile(uid: str, db: AsyncClient) -> str:
 
     # Count completed exercises
     completed = 0
+    from google.cloud.firestore_v1.base_query import FieldFilter
     progress_query = db.collection("exercise_progress").where(
-        "uid", "==", uid
-    ).where("status", "==", "completed")
+        filter=FieldFilter("uid", "==", uid)
+    ).where(
+        filter=FieldFilter("status", "==", "completed")
+    )
     async for _ in progress_query.stream():
         completed += 1
 
@@ -275,15 +278,16 @@ async def ask_tutor(
             tokens_used=0,
         )
 
-    # Save conversation history
+    # Save conversation history (original reply without usage info)
     await _save_history(uid, history, user_message, reply, db)
 
-    # Increment usage counter
+    # Increment usage counter and append remaining info to response only
     count = await _increment_usage(uid, db)
+    display_reply = reply
 
     remaining = DAILY_QUESTION_LIMIT - count
     if remaining <= 5:
-        reply += f"\n\n(Залишилось питань на сьогодні: {remaining})"
+        display_reply += f"\n\n(Залишилось питань на сьогодні: {remaining})"
 
     logger.info(
         "Tutor question answered",
@@ -292,4 +296,4 @@ async def ask_tutor(
         daily_count=count,
     )
 
-    return TutorResponse(reply=reply, tokens_used=tokens_used)
+    return TutorResponse(reply=display_reply, tokens_used=tokens_used)

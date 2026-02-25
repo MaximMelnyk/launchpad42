@@ -24,6 +24,10 @@ from app.models.gamification import (
 
 logger = structlog.get_logger()
 
+# Brute-force protection: max failed attempts before cooldown
+MAX_START_ATTEMPTS = 5
+START_COOLDOWN_MINUTES = 60
+
 # Role constants
 STUDENT_COMMANDS = {"/start", "/today", "/progress", "/drill", "/hint", "/skip", "/mood"}
 MOTHER_COMMANDS = {"/start", "/today", "/week", "/streak", "/level"}
@@ -73,9 +77,9 @@ async def _require_linked(update: Update, db: AsyncClient) -> bool:
     """Verify chat is linked. If not, reply with instructions and return False."""
     chat_id = update.effective_chat.id
     if not await _is_linked(chat_id, db):
-        await update.message.reply_text(
-            "Спочатку зв'яжіть акаунт через /start"
-        )
+        msg = update.effective_message
+        if msg:
+            await msg.reply_text("Спочатку зв'яжіть акаунт через /start")
         return False
     return True
 
@@ -87,11 +91,31 @@ async def _require_role(
     chat_id = update.effective_chat.id
     role = await _get_role(chat_id, db)
     if role != required_role:
-        await update.message.reply_text(
-            "Ця команда недоступна для вашої ролі."
-        )
+        msg = update.effective_message
+        if msg:
+            await msg.reply_text("Ця команда недоступна для вашої ролі.")
         return False
     return True
+
+
+async def _record_failed_attempt(chat_id: int, db: AsyncClient) -> None:
+    """Record a failed /start access code attempt for brute-force protection."""
+    from google.cloud.firestore_v1 import Increment
+
+    doc_ref = db.collection("telegram_rate_limit").document(str(chat_id))
+    doc = await doc_ref.get()
+
+    if doc.exists:
+        await doc_ref.update({
+            "failed_attempts": Increment(1),
+            "last_attempt": datetime.now(timezone.utc),
+        })
+    else:
+        await doc_ref.set({
+            "chat_id": chat_id,
+            "failed_attempts": 1,
+            "last_attempt": datetime.now(timezone.utc),
+        })
 
 
 async def _get_student_uid(db: AsyncClient) -> str | None:
@@ -157,6 +181,26 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     requested_role = args[0].lower()
     provided_code = args[1]
 
+    # Brute-force protection: check failed attempt count
+    rate_doc = await db.collection("telegram_rate_limit").document(str(chat_id)).get()
+    if rate_doc.exists:
+        rate_data = rate_doc.to_dict()
+        attempts = rate_data.get("failed_attempts", 0)
+        last_attempt = rate_data.get("last_attempt")
+        if attempts >= MAX_START_ATTEMPTS and last_attempt:
+            if isinstance(last_attempt, str):
+                last_attempt = datetime.fromisoformat(last_attempt)
+            if last_attempt.tzinfo is None:
+                last_attempt = last_attempt.replace(tzinfo=timezone.utc)
+            cooldown_end = last_attempt + timedelta(minutes=START_COOLDOWN_MINUTES)
+            if datetime.now(timezone.utc) < cooldown_end:
+                await update.message.reply_text(
+                    "Забагато невдалих спроб. Спробуйте через годину."
+                )
+                return
+            # Cooldown expired, reset counter
+            await db.collection("telegram_rate_limit").document(str(chat_id)).delete()
+
     if requested_role == "mother":
         if not settings.mother_access_code:
             await update.message.reply_text(
@@ -165,6 +209,7 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             )
             return
         if provided_code != settings.mother_access_code:
+            await _record_failed_attempt(chat_id, db)
             await update.message.reply_text("Невірний код доступу.")
             return
 
@@ -190,6 +235,7 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         )
         return
     if provided_code != settings.student_access_code:
+        await _record_failed_attempt(chat_id, db)
         await update.message.reply_text("Невірний код доступу.")
         return
 
@@ -705,13 +751,17 @@ async def send_student_preview(db: AsyncClient) -> None:
     if not uid:
         return
 
-    user_doc = await db.collection("users").document(uid).get()
-    if not user_doc.exists:
-        return
+    # Read student chat_id from telegram_links (not users doc — P1-6 security fix)
+    query = db.collection("telegram_links").where(
+        filter=FieldFilter("role", "==", TelegramRole.STUDENT.value)
+    )
+    student_chat_id: int | None = None
+    async for doc in query.stream():
+        student_chat_id = doc.to_dict().get("chat_id")
+        break
 
-    u = user_doc.to_dict()
-    chat_id = u.get("telegram_chat_id")
-    if not chat_id:
+    if not student_chat_id:
+        logger.warning("No student chat linked for preview")
         return
 
     report = await _generate_weekly_report(uid, db)
@@ -723,8 +773,8 @@ async def send_student_preview(db: AsyncClient) -> None:
     from telegram import Bot
     if settings.telegram_bot_token:
         bot = Bot(settings.telegram_bot_token)
-        await bot.send_message(chat_id=chat_id, text=preview_text)
-        logger.info("Student preview sent", chat_id=chat_id)
+        await bot.send_message(chat_id=student_chat_id, text=preview_text)
+        logger.info("Student preview sent", chat_id=student_chat_id)
 
 
 # --- Bot Setup ---

@@ -19,14 +19,24 @@ def _get_webhook_secret_token() -> str:
     return hashlib.sha256(settings.telegram_bot_token.encode()).hexdigest()[:32]
 
 
+def _get_scheduler_secret() -> str:
+    """Derive scheduler secret from bot token hash (last 32 chars)."""
+    if not settings.telegram_bot_token:
+        return ""
+    return hashlib.sha256(
+        f"scheduler:{settings.telegram_bot_token}".encode()
+    ).hexdigest()[:32]
+
+
 def _verify_scheduler_secret(header_value: str | None) -> None:
-    """Verify X-Scheduler-Secret header matches telegram_bot_token."""
+    """Verify X-Scheduler-Secret header matches derived secret."""
     if not settings.telegram_bot_token:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Bot not configured",
         )
-    if header_value != settings.telegram_bot_token:
+    expected = _get_scheduler_secret()
+    if header_value != expected:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Invalid scheduler secret",

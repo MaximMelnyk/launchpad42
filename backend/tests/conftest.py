@@ -81,6 +81,24 @@ class MockDocumentRef:
         else:
             self._collection[self._id] = data
 
+    async def update(self, data: dict):
+        """Update fields in existing document. Handles Increment sentinels."""
+        from google.cloud.firestore_v1.transforms import _NumericValue
+
+        if self._id not in self._collection:
+            raise ValueError(f"Document {self._id} does not exist")
+        for key, value in data.items():
+            if isinstance(value, _NumericValue):
+                # Handle Increment/Minimum/Maximum sentinels
+                current = self._collection[self._id].get(key, 0)
+                self._collection[self._id][key] = current + value.value
+            else:
+                self._collection[self._id][key] = value
+
+    async def delete(self):
+        """Delete document from collection."""
+        self._collection.pop(self._id, None)
+
 
 class MockCollectionRef:
     """Mock a Firestore collection reference."""

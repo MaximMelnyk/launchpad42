@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime, timedelta, timezone
 
 import structlog
-from google.cloud.firestore_v1 import AsyncClient
+from google.cloud.firestore_v1 import AsyncClient, Increment
 from google.cloud.firestore_v1.base_query import FieldFilter
 
 from app.models.gamification import (
@@ -184,7 +184,7 @@ async def start_exam(
     )
 
     doc_id = f"{uid}_{exam_id}"
-    await db.collection("exams").document(doc_id).set(exam.model_dump())
+    await db.collection("exams").document(doc_id).set(exam.model_dump(mode="json"))
 
     logger.info(
         "Exam started",
@@ -260,14 +260,10 @@ async def submit_exam_exercise(
         now = datetime.now(timezone.utc)
         if score >= PASS_THRESHOLD:
             update_data["status"] = ExamStatus.PASSED.value
-            # Award bonus XP
-            user_doc = await db.collection("users").document(uid).get()
-            if user_doc.exists:
-                user_data = user_doc.to_dict()
-                new_xp = user_data.get("xp", 0) + XP_BONUS_EXAM_PASS
-                await db.collection("users").document(uid).set(
-                    {"xp": new_xp, "updated_at": now}, merge=True
-                )
+            # Award bonus XP atomically
+            await db.collection("users").document(uid).update(
+                {"xp": Increment(XP_BONUS_EXAM_PASS), "updated_at": now}
+            )
         elif score >= PARTIAL_THRESHOLD:
             update_data["status"] = ExamStatus.PARTIAL.value
         else:

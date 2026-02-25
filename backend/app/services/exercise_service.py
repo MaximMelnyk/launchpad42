@@ -4,7 +4,7 @@ import re
 from datetime import datetime, timezone
 
 import structlog
-from google.cloud.firestore_v1 import AsyncClient
+from google.cloud.firestore_v1 import AsyncClient, Increment
 
 from app.models.exercise import (
     Exercise,
@@ -187,16 +187,12 @@ async def submit_exercise(
         progress_data, merge=True
     )
 
-    # Update user XP
-    user_doc = await db.collection("users").document(uid).get()
-    if user_doc.exists:
-        user_data = user_doc.to_dict()
-        current_xp = user_data.get("xp", 0)
-        new_xp = current_xp + xp_earned
-        await db.collection("users").document(uid).set(
-            {"xp": new_xp, "updated_at": now}, merge=True
+    # Update user XP atomically
+    try:
+        await db.collection("users").document(uid).update(
+            {"xp": Increment(xp_earned), "updated_at": now}
         )
-    else:
+    except Exception:
         raise ValueError(f"User not found: {uid}")
 
     # Check level up (import here to avoid circular imports)

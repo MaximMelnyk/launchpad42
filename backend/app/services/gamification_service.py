@@ -3,7 +3,7 @@
 from datetime import date, datetime, timedelta, timezone
 
 import structlog
-from google.cloud.firestore_v1 import AsyncClient
+from google.cloud.firestore_v1 import AsyncClient, Increment
 from google.cloud.firestore_v1.base_query import FieldFilter
 
 from app.core.utils import is_date_in_range
@@ -45,7 +45,8 @@ def _next_sm2_interval(current_interval: int) -> int:
 async def check_level_up(uid: str, db: AsyncClient) -> bool:
     """Compare user XP to LEVEL_XP_THRESHOLDS.
 
-    If next level threshold met, advance level. Return True if leveled up.
+    Loop to handle multi-level jumps (e.g., large XP awards).
+    Return True if any level up occurred.
     """
     user_doc = await db.collection("users").document(uid).get()
     if not user_doc.exists:
@@ -58,13 +59,21 @@ async def check_level_up(uid: str, db: AsyncClient) -> bool:
     if current_level >= 6:
         return False
 
-    next_level = current_level + 1
-    threshold = LEVEL_XP_THRESHOLDS.get(next_level, float("inf"))
+    leveled_up = False
+    new_level = current_level
 
-    if current_xp >= threshold:
+    while new_level < 6:
+        threshold = LEVEL_XP_THRESHOLDS.get(new_level + 1, float("inf"))
+        if current_xp >= threshold:
+            new_level += 1
+            leveled_up = True
+        else:
+            break
+
+    if leveled_up:
         await db.collection("users").document(uid).set(
             {
-                "level": next_level,
+                "level": new_level,
                 "updated_at": datetime.now(timezone.utc),
             },
             merge=True,
@@ -72,13 +81,12 @@ async def check_level_up(uid: str, db: AsyncClient) -> bool:
         logger.info(
             "Level up",
             uid=uid,
-            new_level=next_level,
-            level_name=LEVEL_NAMES.get(next_level),
+            new_level=new_level,
+            level_name=LEVEL_NAMES.get(new_level),
             xp=current_xp,
         )
-        return True
 
-    return False
+    return leveled_up
 
 
 async def check_achievements(uid: str, db: AsyncClient) -> list[str]:
@@ -284,12 +292,10 @@ async def check_achievements(uid: str, db: AsyncClient) -> list[str]:
             ach_data, merge=True
         )
 
-    # Award accumulated XP bonus in a single write
+    # Award accumulated XP bonus atomically
     if total_xp_bonus > 0:
-        user_xp = user_data.get("xp", 0)
-        await db.collection("users").document(uid).set(
-            {"xp": user_xp + total_xp_bonus, "updated_at": now},
-            merge=True,
+        await db.collection("users").document(uid).update(
+            {"xp": Increment(total_xp_bonus), "updated_at": now}
         )
 
     return newly_unlocked
@@ -470,14 +476,10 @@ async def process_drill(
         merge=True,
     )
 
-    # Update user XP
-    user_doc = await db.collection("users").document(uid).get()
-    if user_doc.exists:
-        user_data = user_doc.to_dict()
-        new_xp = user_data.get("xp", 0) + xp_earned
-        await db.collection("users").document(uid).set(
-            {"xp": new_xp, "updated_at": now}, merge=True
-        )
+    # Update user XP atomically
+    await db.collection("users").document(uid).update(
+        {"xp": Increment(xp_earned), "updated_at": now}
+    )
 
     logger.info(
         "Drill completed",
@@ -555,15 +557,11 @@ async def process_review(
         merge=True,
     )
 
-    # Award XP if correct
+    # Award XP atomically if correct
     if xp_earned > 0:
-        user_doc = await db.collection("users").document(uid).get()
-        if user_doc.exists:
-            user_data = user_doc.to_dict()
-            new_xp = user_data.get("xp", 0) + xp_earned
-            await db.collection("users").document(uid).set(
-                {"xp": new_xp, "updated_at": now}, merge=True
-            )
+        await db.collection("users").document(uid).update(
+            {"xp": Increment(xp_earned), "updated_at": now}
+        )
 
     logger.info(
         "Review completed",

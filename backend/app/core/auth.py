@@ -24,9 +24,14 @@ async def verify_firebase_token(
     try:
         loop = asyncio.get_event_loop()
         decoded = await loop.run_in_executor(
-            None, partial(auth.verify_id_token, token)
+            None, partial(auth.verify_id_token, token, check_revoked=True)
         )
         return decoded
+    except auth.RevokedIdTokenError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Firebase ID token has been revoked",
+        )
     except auth.InvalidIdTokenError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
