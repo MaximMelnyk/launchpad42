@@ -114,4 +114,4 @@ return (s1[i] - s2[i]);
 | Термін | Французькою | Приклад |
 |--------|------------|---------|
 | обмежити | limiter | "Limiter la comparaison a n caracteres" |
-| безпечний | securise | "Une version securisee de strcmp" |
+| безпечний | sécurisé | "Une version sécurisée de strcmp" |

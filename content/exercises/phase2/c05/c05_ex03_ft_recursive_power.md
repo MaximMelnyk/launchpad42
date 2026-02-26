@@ -154,5 +154,5 @@ int	ft_recursive_power(int nb, int power)
 
 | Термін | Французькою | Приклад |
 |--------|------------|---------|
-| степінь | puissance | "Calculer la puissance recursivement" |
-| рекурсія | recursion | "La recursion reduit le probleme" |
+| степінь | puissance | "Calculer la puissance récursivement" |
+| рекурсія | récursion | "La récursion reduit le probleme" |

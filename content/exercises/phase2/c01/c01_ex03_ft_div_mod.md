@@ -110,4 +110,4 @@ int	main(void)
 |--------|------------|---------|
 | ділення | division | "La division entiere" |
 | остача | modulo / reste | "Le reste de la division" |
-| результат | resultat | "Stocker le resultat via pointeur" |
+| результат | résultat | "Stocker le résultat via pointeur" |

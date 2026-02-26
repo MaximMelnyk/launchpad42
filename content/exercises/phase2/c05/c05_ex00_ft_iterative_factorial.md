@@ -136,5 +136,5 @@ while (i <= nb)
 | Термін | Французькою | Приклад |
 |--------|------------|---------|
 | факторіал | factorielle | "La factorielle de 5 est 120" |
-| ітеративний | iteratif | "Une solution iterative avec une boucle" |
+| ітеративний | itératif | "Une solution iterative avec une boucle" |
 | цикл | boucle | "Utilise une boucle while" |

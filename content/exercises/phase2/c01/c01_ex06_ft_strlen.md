@@ -128,5 +128,5 @@ int	ft_strlen(char *str)
 | Термін | Французькою | Приклад |
 |--------|------------|---------|
 | довжина | longueur | "Retourner la longueur" |
-| нуль-термінатор | terminateur nul | "Compter jusqu'au terminateur nul" |
+| нуль-термінатор | caractère nul | "Compter jusqu'au caractère nul" |
 | submission | rendu | "Preparer le rendu pour la Moulinette" |

@@ -142,5 +142,5 @@ while (i < power)
 
 | Термін | Французькою | Приклад |
 |--------|------------|---------|
-| степінь | puissance | "2 puissance 10 egale 1024" |
-| піднесення | elevation | "Elevation a la puissance" |
+| степінь | puissance | "2 puissance 10 égale 1024" |
+| піднесення | élévation | "Elevation a la puissance" |

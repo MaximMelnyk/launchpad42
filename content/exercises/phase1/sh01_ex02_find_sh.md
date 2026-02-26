@@ -105,5 +105,5 @@ find . -type f -name "*.sh" | sed 's:.*/\(.*\)\.sh$:\1:'
 |--------|------------|---------|
 | знайти | trouver / chercher | "Trouver tous les fichiers .sh" |
 | розширення файлу | extension de fichier | "L'extension .sh indique un script shell" |
-| рекурсивно | recursivement | "Chercher recursivement dans les sous-dossiers" |
+| рекурсивно | récursivement | "Chercher récursivement dans les sous-dossiers" |
 | регулярний вираз | expression reguliere / regex | "Utiliser une regex avec sed" |

@@ -119,13 +119,13 @@ ABC 6
 
 ```c
 dest_len = 0;
-while (dest[dest_len] && dest_len < size)
+while (dest_len < size && dest[dest_len])
     dest_len++;
 if (dest_len == size)
     return (size + src_len);
 ```
 
-Цей патерн гарантує, що ми не читаємо за межами `size`.
+Порядок умов важливий: спочатку перевіряємо межі (`dest_len < size`), потім читаємо символ.
 
 </details>
 
@@ -155,6 +155,6 @@ dest[dest_len + i] = '\0';
 
 | Термін | Французькою | Приклад |
 |--------|------------|---------|
-| безпечний | securise | "Concatenation securisee" |
+| безпечний | sécurisé | "Concatenation sécurisée" |
 | буфер | tampon | "Taille du tampon" |
-| переповнення | debordement | "Eviter le debordement de tampon" |
+| переповнення | débordement | "Eviter le débordement de tampon" |

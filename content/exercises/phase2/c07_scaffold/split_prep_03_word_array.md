@@ -201,5 +201,5 @@ if (!result[1])
 |--------|------------|---------|
 | масив | tableau | "Un tableau de chaines de caracteres" |
 | подвійний вказівник | double pointeur | "char ** est un double pointeur" |
-| звільнити | liberer | "N'oublie pas de liberer la memoire" |
+| звільнити | libérer | "N'oublie pas de libérer la mémoire" |
 | порожній | vide | "Si la chaine est vide, retourne NULL" |

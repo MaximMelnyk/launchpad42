@@ -144,4 +144,4 @@ OK
 | розминка | echauffement | "C'est l'echauffement avant l'exam" |
 | швидкий | rapide | "Ecris le code le plus rapide possible" |
 | перевірка | verification | "Fais la verification apres chaque fonction" |
-| пам'ять | memoire | "Ecrire de memoire, sans aide" |
+| пам'ять | mémoire | "Ecrire de mémoire, sans aide" |

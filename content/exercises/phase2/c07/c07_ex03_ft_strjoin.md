@@ -155,7 +155,7 @@ result[k] = '\0';
 
 | Термін | Французькою | Приклад |
 |--------|------------|---------|
-| об'єднати | joindre / concatener | "Joindre les chaines avec un separateur" |
-| роздільник | separateur | "Inserer le separateur entre les chaines" |
-| виділити | allouer | "Allouer assez de memoire" |
+| об'єднати | joindre / concaténer | "Joindre les chaines avec un séparateur" |
+| роздільник | séparateur | "Inserer le séparateur entre les chaines" |
+| виділити | allouer | "Allouer assez de mémoire" |
 | порожній рядок | chaine vide | "Retourner une chaine vide" |

@@ -216,8 +216,8 @@ cc main.c libft.a -o test
 
 | Термін | Французькою | Приклад |
 |--------|------------|---------|
-| бібліотека | bibliotheque | "Creer une bibliotheque statique" |
+| бібліотека | bibliothèque | "Creer une bibliothèque statique" |
 | архів | archive | "L'archive contient les fichiers objets" |
-| лінкувати | linker / lier | "Linker le programme avec la bibliotheque" |
+| лінкувати | linker / lier | "Linker le programme avec la bibliothèque" |
 | компілювати | compiler | "Compiler chaque fichier source en objet" |
-| заголовок | en-tete (header) | "Le fichier en-tete contient les prototypes" |
+| заголовок | en-tête (header) | "Le fichier en-tête contient les prototypes" |

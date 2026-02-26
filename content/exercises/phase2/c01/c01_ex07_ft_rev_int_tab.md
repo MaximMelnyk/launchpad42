@@ -168,4 +168,4 @@ void	ft_rev_int_tab(int *tab, int size)
 |--------|------------|---------|
 | розвернути | inverser | "Inverser le tableau" |
 | на місці | en place | "Modifier le tableau en place" |
-| обмін | echange | "Echanger les elements" |
+| обмін | échange | "Echanger les éléments" |

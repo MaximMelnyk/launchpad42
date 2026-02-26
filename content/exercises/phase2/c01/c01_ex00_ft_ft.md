@@ -101,5 +101,5 @@ void	ft_ft(int *nbr)
 | Термін | Французькою | Приклад |
 |--------|------------|---------|
 | вказівник | pointeur | "Un pointeur sur un entier" |
-| адреса | adresse | "L'adresse memoire de la variable" |
-| розіменування | dereferencement | "Dereferencer un pointeur" |
+| адреса | adresse | "L'adresse mémoire de la variable" |
+| розіменування | déréférencement | "Dereferencer un pointeur" |

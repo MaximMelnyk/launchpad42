@@ -20,7 +20,7 @@ order: 72
 
 Напиши функцію `ft_recursive_factorial`, яка обчислює факторіал числа **рекурсивно**.
 
-**Рекурсія** (recursion) -- це коли функція викликає сама себе. Кожна рекурсивна функція має:
+**Рекурсія** (récursion) -- це коли функція викликає сама себе. Кожна рекурсивна функція має:
 1. **Базовий випадок** (base case) -- умова зупинки, без якої рекурсія буде нескінченною
 2. **Рекурсивний крок** -- виклик самої себе з "меншою" задачею
 
@@ -153,6 +153,6 @@ int	ft_recursive_factorial(int nb)
 
 | Термін | Французькою | Приклад |
 |--------|------------|---------|
-| рекурсія | recursion / recursivite | "Une fonction recursive s'appelle elle-meme" |
-| базовий випадок | cas de base | "Le cas de base arrete la recursion" |
-| факторіал | factorielle | "La factorielle recursive de n" |
+| рекурсія | récursion / récursivité | "Une fonction récursive s'appelle elle-meme" |
+| базовий випадок | cas de base | "Le cas de base arrete la récursion" |
+| факторіал | factorielle | "La factorielle récursive de n" |

@@ -130,5 +130,5 @@ char	*ft_strcat(char *dest, char *src)
 
 | Термін | Французькою | Приклад |
 |--------|------------|---------|
-| з'єднати | concatener | "Concatener deux chaines" |
+| з'єднати | concaténer | "Concatener deux chaines" |
 | буфер | tampon | "Le tampon doit etre assez grand" |

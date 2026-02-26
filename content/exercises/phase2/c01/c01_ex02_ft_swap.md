@@ -103,6 +103,6 @@ tmp = *a;
 
 | Термін | Французькою | Приклад |
 |--------|------------|---------|
-| обмін | echange | "Echanger deux valeurs" |
+| обмін | échange | "Echanger deux valeurs" |
 | тимчасова змінна | variable temporaire | "Utiliser une variable temporaire" |
 | передача за адресою | passage par adresse | "Passer les variables par adresse" |

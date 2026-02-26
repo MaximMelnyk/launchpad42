@@ -252,8 +252,8 @@ No relinking перевірка для бібліотеки:
 
 | Термін | Французькою | Приклад |
 |--------|------------|---------|
-| бібліотека | bibliotheque | "Cree une bibliotheque statique" |
-| статична | statique | "La bibliotheque statique libft.a" |
-| архів | archive | "ar cree une archive de fichiers .o" |
+| бібліотека | bibliothèque | "Cree une bibliothèque statique" |
+| статична | statique | "La bibliothèque statique libft.a" |
+| архів | archive | "ar crée une archive de fichiers .o" |
 | лінковка | edition de liens / linkage | "L'edition de liens avec -lft" |
-| індекс | index | "Le flag 's' cree un index" |
+| індекс | index | "Le flag 's' crée un index" |

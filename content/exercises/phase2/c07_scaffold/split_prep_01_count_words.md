@@ -167,5 +167,5 @@ while (str[i])
 |--------|------------|---------|
 | рахувати | compter | "Compter les mots dans la chaine" |
 | слово | mot | "Combien de mots dans cette phrase?" |
-| роздільник | delimiteur / separateur | "Le delimiteur est un espace" |
+| роздільник | délimiteur / séparateur | "Le délimiteur est un espace" |
 | рядок | chaine | "Parcourir la chaine caractere par caractere" |

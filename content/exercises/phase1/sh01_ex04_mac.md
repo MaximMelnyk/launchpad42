@@ -115,4 +115,4 @@ ifconfig -a | grep ether | awk '{print $2}'
 | мережевий інтерфейс | interface reseau | "Lister les interfaces reseau" |
 | адреса | adresse | "L'adresse MAC de l'interface" |
 | фільтрувати | filtrer | "Filtrer la sortie avec grep ou awk" |
-| поле | champ | "Le deuxieme champ contient l'adresse MAC" |
+| поле | champ | "Le deuxième champ contient l'adresse MAC" |

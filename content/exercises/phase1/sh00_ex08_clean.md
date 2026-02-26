@@ -123,4 +123,4 @@ find . -type f \( -name "*~" -o -name "#*#" -o -name "*.o" \) -exec rm {} \;
 | знайти | trouver / chercher | "Chercher les fichiers temporaires" |
 | видалити | supprimer | "Supprimer les fichiers objets" |
 | тимчасовий | temporaire | "Les fichiers temporaires" |
-| рекурсивно | recursivement | "Chercher recursivement dans les sous-repertoires" |
+| рекурсивно | récursivement | "Chercher récursivement dans les sous-repertoires" |

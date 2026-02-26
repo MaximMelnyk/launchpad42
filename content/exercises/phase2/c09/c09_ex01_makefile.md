@@ -216,7 +216,7 @@ $(NAME): $(OBJ)
 | Термін | Французькою | Приклад |
 |--------|------------|---------|
 | збірка | compilation | "La compilation du projet" |
-| правило | regle | "Chaque regle du Makefile a une cible et des dependances" |
-| залежність | dependance | "Les .o dependent des .c" |
+| правило | règle | "Chaque règle du Makefile a une cible et des dépendances" |
+| залежність | dépendance | "Les .o dependent des .c" |
 | перекомпіляція | recompilation | "Pas de recompilation inutile" |
 | очищення | nettoyage | "make clean pour le nettoyage" |

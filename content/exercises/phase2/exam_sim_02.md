@@ -243,9 +243,9 @@ G          -- go to bottom
 
 | Термін | Французькою | Приклад |
 |--------|------------|---------|
-| іспит | examen | "Le deuxieme examen de la Piscine" |
-| покращення | amelioration / progression | "Comparer ta progression avec l'examen 1" |
+| іспит | examen | "Le deuxième examen de la Piscine" |
+| покращення | amélioration / progression | "Comparer ta progression avec l'examen 1" |
 | рівень | niveau | "J'ai atteint le niveau 3 cette fois" |
-| пам'ять | memoire | "malloc alloue de la memoire dynamique" |
+| пам'ять | mémoire | "malloc alloue de la mémoire dynamique" |
 | сортування | tri | "Trier un tableau d'entiers" |
-| зв'язаний список | liste chainee | "Compter les elements d'une liste chainee" |
+| зв'язаний список | liste chaînée | "Compter les éléments d'une liste chaînée" |

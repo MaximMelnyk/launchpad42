@@ -164,4 +164,4 @@ int	ft_find_next_prime(int nb)
 | Термін | Французькою | Приклад |
 |--------|------------|---------|
 | наступне просте | prochain premier | "Trouver le prochain nombre premier" |
-| більше або рівне | superieur ou egal | "Le premier nombre premier superieur ou egal a nb" |
+| більше або рівне | supérieur ou egal | "Le premier nombre premier supérieur ou egal a nb" |

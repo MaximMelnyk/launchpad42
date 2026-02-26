@@ -151,7 +151,7 @@ char	*ft_strdup(char *src)
 
 | Термін | Французькою | Приклад |
 |--------|------------|---------|
-| виділити пам'ять | allouer de la memoire | "Allouer de la memoire avec malloc" |
+| виділити пам'ять | allouer de la mémoire | "Allouer de la mémoire avec malloc" |
 | дублювати | dupliquer | "Dupliquer une chaine" |
-| купа (heap) | tas | "La memoire est allouee sur le tas" |
-| звільнити | liberer | "Liberer la memoire avec free" |
+| купа (heap) | tas | "La mémoire est allouee sur le tas" |
+| звільнити | libérer | "Liberer la mémoire avec free" |

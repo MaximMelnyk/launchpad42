@@ -133,5 +133,5 @@ while (i < argc - 1)
 |--------|------------|---------|
 | сортувати | trier | "Trier les parametres" |
 | порівняння | comparaison | "Comparaison lexicographique" |
-| міняти місцями | echanger / swap | "Echanger deux elements" |
+| міняти місцями | échanger / swap | "Echanger deux éléments" |
 | бульбашкове сортування | tri a bulles | "Le tri a bulles est simple" |

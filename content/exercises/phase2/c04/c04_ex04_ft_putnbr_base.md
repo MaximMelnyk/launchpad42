@@ -157,7 +157,7 @@ if (n < 0)
 
 | Термін | Французькою | Приклад |
 |--------|------------|---------|
-| база | base | "Convertir en base hexadecimale" |
-| двійкова | binaire | "Le systeme binaire" |
-| шістнадцяткова | hexadecimal | "Notation hexadecimale" |
+| база | base | "Convertir en base hexadécimale" |
+| двійкова | binaire | "Le système binaire" |
+| шістнадцяткова | hexadécimal | "Notation hexadécimale" |
 | валідація | validation | "Valider la base" |

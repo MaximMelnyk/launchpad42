@@ -88,5 +88,5 @@ find . | wc -l | tr -d ' '
 |--------|------------|---------|
 | порахувати | compter | "Compter le nombre de fichiers" |
 | директорія / папка | dossier / repertoire | "Combien de fichiers dans ce repertoire ?" |
-| рекурсивно | recursivement | "Lister recursivement tous les fichiers" |
+| рекурсивно | récursivement | "Lister récursivement tous les fichiers" |
 | рядок | ligne | "Compter les lignes avec wc -l" |

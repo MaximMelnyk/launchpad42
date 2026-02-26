@@ -280,8 +280,8 @@ int	solve(int grid[4][4], int *constraints, int pos)
 | Термін | Французькою | Приклад |
 |--------|------------|---------|
 | головоломка | casse-tete / puzzle | "Le rush01 c'est un casse-tete de grilles" |
-| обмеження | contrainte | "Les contraintes de visibilite" |
-| видимість | visibilite | "Compter les batiments visibles" |
-| повернення назад | retour arriere (backtracking) | "L'algorithme de retour arriere explore toutes les possibilites" |
+| обмеження | contrainte | "Les contraintes de visibilité" |
+| видимість | visibilité | "Compter les bâtiments visibles" |
+| повернення назад | retour arriere (backtracking) | "L'algorithme de retour arriere explore toutes les possibilités" |
 | сітка | grille | "Remplir la grille 4x4" |
 | команда | equipe | "On fait le rush en equipe de 2-3" |

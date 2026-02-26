@@ -116,4 +116,4 @@ git status --ignored
 | ігнорувати | ignorer | "Ignorer les fichiers objets" |
 | паттерн | motif / pattern | "Les motifs du gitignore" |
 | об'єктний файл | fichier objet | "Les fichiers objets (.o)" |
-| бібліотека | bibliotheque | "Les bibliotheques statiques (.a)" |
+| бібліотека | bibliothèque | "Les bibliothèques statiques (.a)" |

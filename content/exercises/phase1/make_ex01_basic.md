@@ -182,5 +182,5 @@ CFLAGS = -Wall -Wextra -Werror  # прапорці
 | компілювати | compiler | "Le Makefile compile le programme" |
 | прапорець | drapeau / flag | "Les flags de compilation" |
 | ціль | cible / target | "La cible 'all' compile tout" |
-| залежність | dependance | "Les fichiers .c sont des dependances" |
+| залежність | dépendance | "Les fichiers .c sont des dépendances" |
 | збірка | construction / build | "Lance le build avec make" |

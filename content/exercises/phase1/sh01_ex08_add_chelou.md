@@ -163,7 +163,7 @@ echo "ibase=5; obase=23; 1234" | bc
 | Термін | Французькою | Приклад |
 |--------|------------|---------|
 | дивний / незвичний | chelou / bizarre | "C'est chelou comme exercice" |
-| система числення | systeme de numeration / base | "Convertir en base 13" |
+| система числення | système de numeration / base | "Convertir en base 13" |
 | додавання | addition | "Faire l'addition de deux nombres" |
 | основа (бази) | base | "Un nombre en base 5" |
 | калькулятор | calculatrice | "bc est une calculatrice en ligne de commande" |

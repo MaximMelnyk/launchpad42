@@ -164,5 +164,5 @@ fib(4) = 2 + 1 = 3
 | Термін | Французькою | Приклад |
 |--------|------------|---------|
 | послідовність | suite | "La suite de Fibonacci" |
-| рекурсія | recursion | "Double recursion dans Fibonacci" |
+| рекурсія | récursion | "Double récursion dans Fibonacci" |
 | індекс | indice | "L'indice du nombre de Fibonacci" |

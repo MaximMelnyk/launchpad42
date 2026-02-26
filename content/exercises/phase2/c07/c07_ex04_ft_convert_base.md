@@ -179,7 +179,7 @@ while (len > start)
 
 | Термін | Французькою | Приклад |
 |--------|------------|---------|
-| система числення | base / systeme de numeration | "Convertir d'une base a une autre" |
-| конвертувати | convertir | "Convertir en hexadecimal" |
+| система числення | base / système de numeration | "Convertir d'une base a une autre" |
+| конвертувати | convertir | "Convertir en hexadécimal" |
 | валідація | validation | "Valider la base" |
 | від'ємний | negatif | "Gerer les nombres negatifs" |

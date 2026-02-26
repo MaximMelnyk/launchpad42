@@ -108,4 +108,4 @@ int	ft_strlen(char *str)
 |--------|------------|---------|
 | довжина | longueur | "La longueur de la chaine" |
 | рядок | chaine | "Une chaine de caracteres" |
-| нуль-термінатор | terminateur nul | "Le caractere nul termine la chaine" |
+| нуль-термінатор | caractère nul | "Le caractere nul termine la chaine" |

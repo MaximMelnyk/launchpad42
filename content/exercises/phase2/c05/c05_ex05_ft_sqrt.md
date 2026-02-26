@@ -20,7 +20,7 @@ order: 76
 
 Напиши функцію `ft_sqrt`, яка повертає цілий квадратний корінь числа.
 
-Квадратний корінь (racine carree) -- це число `r`, таке що `r * r == nb`.
+Квадратний корінь (racine carrée) -- це число `r`, таке що `r * r == nb`.
 
 Правила:
 - Якщо `nb` -- точний квадрат (perfect square), поверни його корінь
@@ -169,6 +169,6 @@ return (0);
 
 | Термін | Французькою | Приклад |
 |--------|------------|---------|
-| квадратний корінь | racine carree | "La racine carree de 25 est 5" |
-| точний квадрат | carre parfait | "25 est un carre parfait" |
-| переповнення | depassement | "Attention au depassement d'entier" |
+| квадратний корінь | racine carrée | "La racine carrée de 25 est 5" |
+| точний квадрат | carré parfait | "25 est un carré parfait" |
+| переповнення | dépassement | "Attention au dépassement d'entier" |

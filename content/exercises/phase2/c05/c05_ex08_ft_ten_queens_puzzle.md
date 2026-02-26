@@ -188,7 +188,7 @@ int	ft_check(int *board, int row, int col)
 
 | Термін | Французькою | Приклад |
 |--------|------------|---------|
-| ферзь | reine | "Placer dix reines sur l'echiquier" |
-| шахівниця | echiquier | "Un echiquier de 10 par 10" |
-| бектрекінг | retour sur trace | "L'algorithme de retour sur trace" |
+| ферзь | reine | "Placer dix reines sur l'échiquier" |
+| шахівниця | échiquier | "Un échiquier de 10 par 10" |
+| бектрекінг | retour arrière | "L'algorithme de retour arrière" |
 | розв'язок | solution | "Il y a 724 solutions" |

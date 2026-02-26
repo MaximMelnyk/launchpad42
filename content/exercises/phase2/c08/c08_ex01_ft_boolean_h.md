@@ -176,4 +176,4 @@ is_valid = TRUE;
 | макрос | macro | "Une macro est une substitution textuelle" |
 | парний | pair | "Un nombre pair est divisible par 2" |
 | непарний | impair | "Un nombre impair" |
-| визначити | definir | "Definir une macro avec #define" |
+| визначити | définir | "Definir une macro avec #define" |

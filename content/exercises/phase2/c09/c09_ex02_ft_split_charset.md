@@ -274,8 +274,8 @@ static void	ft_free_all(char **arr, int count)
 
 | Термін | Французькою | Приклад |
 |--------|------------|---------|
-| набір | ensemble / charset | "Le charset contient les caracteres separateurs" |
-| роздільник | separateur / delimiteur | "Chaque caractere du charset est un separateur" |
-| розбити | decouper | "Decouper la chaine selon un ensemble de separateurs" |
+| набір | ensemble / charset | "Le charset contient les caracteres séparateurs" |
+| роздільник | séparateur / délimiteur | "Chaque caractere du charset est un séparateur" |
+| розбити | decouper | "Decouper la chaine selon un ensemble de séparateurs" |
 | масив | tableau | "Retourner un tableau de chaines" |
-| витік пам'яті | fuite memoire | "Pas de fuite memoire en cas d'erreur malloc" |
+| витік пам'яті | fuite mémoire | "Pas de fuite mémoire en cas d'erreur malloc" |

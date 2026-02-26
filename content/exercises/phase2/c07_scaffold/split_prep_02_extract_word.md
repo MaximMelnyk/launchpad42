@@ -190,6 +190,6 @@ if (*str == '\0')
 | Термін | Французькою | Приклад |
 |--------|------------|---------|
 | витягнути | extraire | "Extraire le premier mot de la chaine" |
-| виділити пам'ять | allouer de la memoire | "Allouer de la memoire avec malloc" |
+| виділити пам'ять | allouer de la mémoire | "Allouer de la mémoire avec malloc" |
 | копіювати | copier | "Copier les caracteres un par un" |
-| звільнити | liberer | "Liberer la memoire avec free" |
+| звільнити | libérer | "Liberer la mémoire avec free" |

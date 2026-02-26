@@ -185,4 +185,4 @@ u          -- undo
 | симуляція | simulation | "C'est une simulation d'examen" |
 | рівень | niveau | "J'ai atteint le niveau 2" |
 | час | temps | "Il reste combien de temps?" |
-| результат | resultat | "Mon resultat est niveau 1" |
+| результат | résultat | "Mon résultat est niveau 1" |

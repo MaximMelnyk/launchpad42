@@ -262,7 +262,7 @@ int	main(void)
 | Термін | Французькою | Приклад |
 |--------|------------|---------|
 | екзамен | examen | "L'examen de passage au niveau suivant" |
-| з пам'яті | par coeur / de memoire | "Ecrire la fonction de memoire" |
+| з пам'яті | par coeur / de mémoire | "Ecrire la fonction de mémoire" |
 | прохідний бал | note de passage | "La note de passage est 2 sur 3" |
-| повторити | reviser | "Revise bien avant l'examen" |
-| рекурсія | recursion | "La recursion c'est quand une fonction s'appelle elle-meme" |
+| повторити | réviser | "Révise bien avant l'examen" |
+| рекурсія | récursion | "La récursion c'est quand une fonction s'appelle elle-meme" |

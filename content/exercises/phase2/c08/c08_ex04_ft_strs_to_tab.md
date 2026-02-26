@@ -237,4 +237,4 @@ char	*ft_strdup(char *src)
 | масив структур | tableau de structures | "Allouer un tableau de structures" |
 | розмір | taille | "La taille de la structure" |
 | перетворити | convertir | "Convertir les arguments en structures" |
-| виділити | allouer | "Allouer de la memoire pour chaque copie" |
+| виділити | allouer | "Allouer de la mémoire pour chaque copie" |

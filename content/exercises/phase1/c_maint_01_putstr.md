@@ -104,6 +104,6 @@ After NULL
 
 | Термін | Французькою | Приклад |
 |--------|------------|---------|
-| пам'ять | memoire | "Ecrire de memoire" (написати з пам'яті) |
+| пам'ять | mémoire | "Ecrire de mémoire" (написати з пам'яті) |
 | повторення | repetition | "La repetition est la cle de l'apprentissage" |
 | рядок | chaine de caracteres | "Afficher une chaine" |

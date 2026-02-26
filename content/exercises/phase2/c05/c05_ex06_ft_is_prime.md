@@ -171,4 +171,4 @@ int	ft_is_prime(int nb)
 |--------|------------|---------|
 | просте число | nombre premier | "2 est le plus petit nombre premier" |
 | дільник | diviseur | "Chercher un diviseur de nb" |
-| подільність | divisibilite | "Test de divisibilite par i" |
+| подільність | divisibilité | "Test de divisibilité par i" |

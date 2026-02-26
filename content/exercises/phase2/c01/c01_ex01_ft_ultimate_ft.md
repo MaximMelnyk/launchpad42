@@ -139,4 +139,4 @@ void	ft_ultimate_ft(int *********nbr)
 |--------|------------|---------|
 | вказівник на вказівник | pointeur de pointeur | "Un pointeur de pointeur sur int" |
 | рівень | niveau | "Neuf niveaux d'indirection" |
-| розіменування | dereferencement | "Dereferencer neuf fois" |
+| розіменування | déréférencement | "Dereferencer neuf fois" |

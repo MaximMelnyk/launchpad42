@@ -427,8 +427,8 @@ Bubble sort -- це два вкладених `while`: зовнішній пов
 | Термін | Французькою | Приклад |
 |--------|------------|---------|
 | екзамен | examen | "L'examen de passage au niveau avance" |
-| з пам'яті | par coeur / de memoire | "Ecrire ft_split de memoire" |
+| з пам'яті | par coeur / de mémoire | "Ecrire ft_split de mémoire" |
 | сортування | tri | "Un tri a bulles (bubble sort)" |
-| конкатенація | concatenation | "Concatener les chaines avec un separateur" |
-| система числення | base / systeme de numeration | "Convertir en base hexadecimale" |
+| конкатенація | concaténation | "Concatener les chaines avec un séparateur" |
+| система числення | base / système de numeration | "Convertir en base hexadécimale" |
 | прохідний бал | note de passage | "Il faut 3 sur 4 pour passer" |

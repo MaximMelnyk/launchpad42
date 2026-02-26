@@ -199,5 +199,5 @@ tab[ac].str = 0;   /* sentinel: marks end of array */
 |--------|------------|---------|
 | вивести | afficher | "Afficher le contenu du tableau" |
 | масив | tableau | "Parcourir le tableau de structures" |
-| маркер кінця | sentinelle | "Le dernier element sert de sentinelle" |
+| маркер кінця | sentinelle | "Le dernier élément sert de sentinelle" |
 | обходити | parcourir | "Parcourir avec une boucle while" |

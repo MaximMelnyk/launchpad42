@@ -183,5 +183,5 @@ set_point(&a, 5, 10);  /* pass address */
 |--------|------------|---------|
 | структура | structure | "Une structure regroupe plusieurs variables" |
 | поле | champ | "Le champ x contient la coordonnee" |
-| визначення типу | definition de type | "typedef cree un alias de type" |
+| визначення типу | definition de type | "typedef crée un alias de type" |
 | вказівник | pointeur | "Un pointeur vers la structure" |
