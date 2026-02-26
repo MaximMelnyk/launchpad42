@@ -152,7 +152,7 @@ int	ft_nbr_len(long nbr, int base_len)
 
 Конвертація числа в рядок (від кінця до початку):
 ```c
-// Allocate result string
+/* Allocate result string */
 result[len] = '\0';
 if (n < 0)
 {

@@ -58,7 +58,7 @@ void  ft_list_remove_if(t_list **begin_list, void *data_ref,
 ### Example
 
 ```c
-// Список: "rm" -> "keep" -> "rm" -> "also_keep"
-// cmp = strcmp, data_ref = "rm", free_fct = free
-// Пiсля виклику: "keep" -> "also_keep"
+/* Список: "rm" -> "keep" -> "rm" -> "also_keep" */
+/* cmp = strcmp, data_ref = "rm", free_fct = free */
+/* Пiсля виклику: "keep" -> "also_keep" */
 ```

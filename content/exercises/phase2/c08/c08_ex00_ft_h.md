@@ -107,7 +107,7 @@ Swap OK
 Заголовний файл -- це звичайний текстовий файл з розширенням `.h`. Він містить тільки прототипи (оголошення) функцій, НЕ їх реалізацію. Прототип -- це "підпис" функції: тип повернення, ім'я, параметри, крапка з комою.
 
 ```c
-void	ft_putchar(char c);  // prototype (declaration)
+void	ft_putchar(char c);  /* prototype (declaration) */
 ```
 
 Реалізація (definition) залишається у `.c` файлі.
@@ -120,12 +120,12 @@ void	ft_putchar(char c);  // prototype (declaration)
 Include guard -- це патерн із трьох рядків. Ім'я макросу зазвичай -- назва файлу ВЕЛИКИМИ літерами, де `.` замінюється на `_`:
 
 ```c
-#ifndef FT_H       // if FT_H is NOT defined yet...
-# define FT_H      // ...define it (mark as "already included")
+#ifndef FT_H       /* if FT_H is NOT defined yet... */
+# define FT_H      /* ...define it (mark as "already included") */
 
-// ... prototypes here ...
+/* ... prototypes here ... */
 
-#endif             // end of the guard
+#endif             /* end of the guard */
 ```
 
 Зверни увагу: Norminette вимагає `# define` (з пробілом після `#`) всередині `#ifndef` блоку. Це відрізняється від `#define` на верхньому рівні.

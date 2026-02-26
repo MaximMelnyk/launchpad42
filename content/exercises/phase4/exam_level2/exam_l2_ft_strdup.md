@@ -42,5 +42,5 @@ char	*ft_strdup(char *src);
 
 ```c
 char *copy = ft_strdup("hello");
-// copy points to new memory containing "hello\0"
+/* copy points to new memory containing "hello\0" */
 ```

@@ -42,7 +42,7 @@ char	*ft_strrev(char *str);
 
 ```c
 char s[] = "Hello";
-ft_strrev(s);   // s is now "olleH", returns s
+ft_strrev(s);   /* s is now "olleH", returns s */
 char e[] = "";
-ft_strrev(e);   // e is still "", returns e
+ft_strrev(e);   /* e is still "", returns e */
 ```

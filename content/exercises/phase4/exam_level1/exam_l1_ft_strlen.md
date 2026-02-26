@@ -41,7 +41,7 @@ int	ft_strlen(char *str);
 ### Example
 
 ```c
-ft_strlen("Hello");  // returns 5
-ft_strlen("");       // returns 0
-ft_strlen("42");     // returns 2
+ft_strlen("Hello");  /* returns 5 */
+ft_strlen("");       /* returns 0 */
+ft_strlen("42");     /* returns 2 */
 ```

@@ -87,7 +87,7 @@ void	ft_print_array(int *arr, int size)
 	i = 0;
 	while (i < size)
 	{
-		// ... print arr[i]
+		/* ... print arr[i] */
 		i++;
 	}
 }

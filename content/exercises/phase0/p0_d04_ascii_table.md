@@ -58,7 +58,7 @@ int	i;
 i = 32;
 while (i <= 126)
 {
-	// print code and character
+	/* print code and character */
 	i++;
 }
 ```

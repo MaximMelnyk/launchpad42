@@ -44,5 +44,5 @@ char	*ft_strcpy(char *dest, char *src);
 char src[] = "Hello";
 char dest[10];
 ft_strcpy(dest, src);
-// dest now contains "Hello"
+/* dest now contains "Hello" */
 ```

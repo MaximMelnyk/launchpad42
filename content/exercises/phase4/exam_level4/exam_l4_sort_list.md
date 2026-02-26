@@ -58,6 +58,6 @@ int ascending(int a, int b)
     return (a <= b);
 }
 
-// Список: 5 -> 3 -> 1 -> 4 -> 2
-// sort_list(list, ascending) -> 1 -> 2 -> 3 -> 4 -> 5
+/* Список: 5 -> 3 -> 1 -> 4 -> 2 */
+/* sort_list(list, ascending) -> 1 -> 2 -> 3 -> 4 -> 5 */
 ```

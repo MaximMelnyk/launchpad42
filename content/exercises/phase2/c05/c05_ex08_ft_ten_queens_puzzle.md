@@ -139,7 +139,7 @@ int	main(void)
 2. `ft_solve` -- рекурсивно шукає розв'язки
 
 ```c
-// Перевірка: чи можна поставити ферзя в (row, col)?
+/* Перевірка: чи можна поставити ферзя в (row, col)? */
 int	ft_check(int *board, int row, int col)
 {
     int	i;
@@ -162,56 +162,21 @@ int	ft_check(int *board, int row, int col)
 </details>
 
 <details>
-<summary>Підказка 3: Основний алгоритм бектрекінгу</summary>
+<summary>Підказка 3: Структура рішення (псевдокод)</summary>
 
-```c
-void	ft_print_solution(int *board)
-{
-    int	i;
+Тобі потрібні 5 функцій (максимум для Norminette):
 
-    i = 0;
-    while (i < 10)
-    {
-        ft_putchar(board[i] + '0');
-        i++;
-    }
-    ft_putchar('\n');
-}
+1. **`ft_putchar`** -- вивід символу через `write`
+2. **`ft_check`** -- перевірка (з Підказки 2)
+3. **`ft_print_solution`** -- виведи `board[0..9]` як цифри + `'\n'`
+4. **`ft_solve(board, row, &count)`** -- головна рекурсія:
+   - якщо `row == 10` → друкуй розв'язок, `count++`, `return`
+   - інакше: перебирай `col` від 0 до 9, якщо `ft_check` пройшов → `board[row] = col`, рекурсивний виклик для `row + 1`
+5. **`ft_ten_queens_puzzle`** -- створи `board[10]`, `count = 0`, виклич `ft_solve`, поверни `count`
 
-void	ft_solve(int *board, int row, int *count)
-{
-    int	col;
+**Ключовий інсайт:** рекурсія автоматично робить backtracking -- після повернення з `ft_solve(row+1)`, наступна ітерація `col++` пробує інший стовпець. Не потрібно явно "відміняти" хід.
 
-    if (row == 10)
-    {
-        ft_print_solution(board);
-        (*count)++;
-        return ;
-    }
-    col = 0;
-    while (col < 10)
-    {
-        if (ft_check(board, row, col))
-        {
-            board[row] = col;
-            ft_solve(board, row + 1, count);
-        }
-        col++;
-    }
-}
-
-int	ft_ten_queens_puzzle(void)
-{
-    int	board[10];
-    int	count;
-
-    count = 0;
-    ft_solve(board, 0, &count);
-    return (count);
-}
-```
-
-**Увага Norminette:** у файлі максимум 5 функцій. Тобі потрібно: `ft_putchar`, `ft_check`, `ft_print_solution`, `ft_solve`, `ft_ten_queens_puzzle` -- рівно 5. Слідкуй за кількістю рядків у кожній функції (max 25).
+**Norminette:** max 25 рядків на функцію. `ft_solve` зазвичай ~15 рядків, `ft_check` ~12 рядків.
 
 </details>
 

@@ -41,8 +41,8 @@ void	print_bits(unsigned char octet);
 ### Example
 
 ```c
-print_bits(2);    // writes "00000010"
-print_bits(0);    // writes "00000000"
-print_bits(255);  // writes "11111111"
-print_bits(65);   // writes "01000001" (ASCII 'A')
+print_bits(2);    /* writes "00000010" */
+print_bits(0);    /* writes "00000000" */
+print_bits(255);  /* writes "11111111" */
+print_bits(65);   /* writes "01000001" (ASCII 'A') */
 ```

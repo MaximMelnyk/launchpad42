@@ -78,7 +78,7 @@ while (a <= 98)
 	b = a + 1;
 	while (b <= 99)
 	{
-		// print a and b
+		/* print a and b */
 		b++;
 	}
 	a++;

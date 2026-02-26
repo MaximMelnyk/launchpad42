@@ -41,9 +41,9 @@ int	ft_strcmp(char *s1, char *s2);
 ### Example
 
 ```c
-ft_strcmp("abc", "abc");  // returns 0
-ft_strcmp("abc", "abd");  // returns negative value
-ft_strcmp("abd", "abc");  // returns positive value
-ft_strcmp("", "");        // returns 0
-ft_strcmp("a", "");       // returns positive value
+ft_strcmp("abc", "abc");  /* returns 0 */
+ft_strcmp("abc", "abd");  /* returns negative value */
+ft_strcmp("abd", "abc");  /* returns positive value */
+ft_strcmp("", "");        /* returns 0 */
+ft_strcmp("a", "");       /* returns positive value */
 ```

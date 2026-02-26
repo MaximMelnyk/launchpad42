@@ -42,5 +42,5 @@ void	ft_swap(int *a, int *b);
 int a = 42;
 int b = 21;
 ft_swap(&a, &b);
-// a == 21, b == 42
+/* a == 21, b == 42 */
 ```

@@ -58,7 +58,7 @@ int	i;
 i = 1;
 while (i <= 9)
 {
-	// print line
+	/* print line */
 	i++;
 }
 ```
@@ -95,7 +95,7 @@ while (i <= 9)
 	j = 1;
 	while (j <= 9)
 	{
-		// print i x j = result
+		/* print i x j = result */
 		j++;
 	}
 	i++;

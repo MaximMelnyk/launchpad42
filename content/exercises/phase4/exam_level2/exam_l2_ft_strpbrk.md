@@ -41,8 +41,8 @@ char	*ft_strpbrk(const char *s1, const char *s2);
 ### Example
 
 ```c
-ft_strpbrk("hello", "ol");   // returns pointer to 'l' in "hello" (index 2)
-ft_strpbrk("hello", "xyz");  // returns NULL
-ft_strpbrk("hello", "h");    // returns pointer to 'h' (index 0)
-ft_strpbrk("", "abc");       // returns NULL
+ft_strpbrk("hello", "ol");   /* returns pointer to 'l' in "hello" (index 2) */
+ft_strpbrk("hello", "xyz");  /* returns NULL */
+ft_strpbrk("hello", "h");    /* returns pointer to 'h' (index 0) */
+ft_strpbrk("", "abc");       /* returns NULL */
 ```

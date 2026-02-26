@@ -42,9 +42,9 @@ int	max(int *tab, unsigned int len);
 
 ```c
 int arr[] = {1, 5, 3, 9, 2};
-max(arr, 5);      // returns 9
-max(arr, 0);      // returns 0
+max(arr, 5);      /* returns 9 */
+max(arr, 0);      /* returns 0 */
 
 int neg[] = {-5, -1, -3};
-max(neg, 3);      // returns -1
+max(neg, 3);      /* returns -1 */
 ```

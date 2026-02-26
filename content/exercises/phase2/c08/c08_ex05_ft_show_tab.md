@@ -157,7 +157,7 @@ void	ft_show_tab(struct s_stock_str *par)
 	int	i;
 
 	i = 0;
-	while (par[i].str)   // stop when str is NULL
+	while (par[i].str)   /* stop when str is NULL */
 	{
 		ft_putstr(par[i].str);
 		ft_putchar('\n');
@@ -179,10 +179,10 @@ void	ft_show_tab(struct s_stock_str *par)
 
 Для цього зміни `ft_strs_to_tab`:
 ```c
-// allocate ac + 1 structs (last one is sentinel)
+/* allocate ac + 1 structs (last one is sentinel) */
 tab = (struct s_stock_str *)malloc(sizeof(struct s_stock_str) * (ac + 1));
-// ... fill ac elements ...
-tab[ac].str = 0;   // sentinel: marks end of array
+/* ... fill ac elements ... */
+tab[ac].str = 0;   /* sentinel: marks end of array */
 ```
 
 Тоді `ft_show_tab` ітерує `while (par[i].str)` -- поки `str` не NULL.

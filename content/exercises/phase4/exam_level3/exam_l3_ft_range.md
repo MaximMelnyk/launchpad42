@@ -45,8 +45,8 @@ int	*ft_range(int start, int end);
 ```c
 int *r;
 
-r = ft_range(0, 5);    // [0, 1, 2, 3, 4]
-r = ft_range(5, 0);    // [5, 4, 3, 2, 1]
-r = ft_range(-2, 2);   // [-2, -1, 0, 1]
-r = ft_range(3, 3);    // NULL
+r = ft_range(0, 5);    /* [0, 1, 2, 3, 4] */
+r = ft_range(5, 0);    /* [5, 4, 3, 2, 1] */
+r = ft_range(-2, 2);   /* [-2, -1, 0, 1] */
+r = ft_range(3, 3);    /* NULL */
 ```

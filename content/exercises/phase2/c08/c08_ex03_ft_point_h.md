@@ -116,10 +116,10 @@ gcc -Wall -Wextra -Werror -o test_point main.c
 Структура -- це "контейнер" для кількох змінних різних (або однакових) типів:
 
 ```c
-struct s_point   // "s_" prefix = struct (42 convention)
+struct s_point   /* "s_" prefix = struct (42 convention) */
 {
-    int x;       // first member (field)
-    int y;       // second member (field)
+    int x;       /* first member (field) */
+    int y;       /* second member (field) */
 };
 ```
 
@@ -139,12 +139,12 @@ typedef struct s_point
 {
     int x;
     int y;
-}   t_point;       // "t_" prefix = typedef (42 convention)
+}   t_point;       /* "t_" prefix = typedef (42 convention) */
 ```
 
 Після цього:
 ```c
-t_point a;          // замість "struct s_point a;"
+t_point a;          /* замість "struct s_point a;" */
 a.x = 10;
 a.y = 20;
 ```
@@ -161,12 +161,12 @@ a.y = 20;
 ```c
 void set_point(t_point *point, int x, int y)
 {
-    point->x = x;   // -> means "dereference and access"
+    point->x = x;   /* -> means "dereference and access" */
     point->y = y;
 }
 
 t_point a;
-set_point(&a, 5, 10);  // pass address
+set_point(&a, 5, 10);  /* pass address */
 ```
 
 Це аналогічно `ft_swap`: щоб змінити значення ззовні функції, потрібен вказівник.

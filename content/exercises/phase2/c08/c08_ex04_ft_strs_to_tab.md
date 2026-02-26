@@ -39,7 +39,7 @@ struct s_stock_str	*ft_strs_to_tab(int ac, char **av);
 
 ### Вимоги
 
-- Функція виділяє масив з `ac` структур типу `struct s_stock_str`
+- Функція виділяє масив з `ac + 1` структур типу `struct s_stock_str` (останній елемент -- sentinel з `str = NULL`)
 - Для кожного рядка `av[i]`:
   - `size` = довжина рядка (без `'\0'`)
   - `str` = вказівник на оригінальний рядок `av[i]` (НЕ копія)
@@ -151,12 +151,14 @@ Piscine 7 Piscine
 ```c
 struct s_stock_str	*tab;
 
-tab = (struct s_stock_str *)malloc(sizeof(struct s_stock_str) * ac);
+tab = (struct s_stock_str *)malloc(sizeof(struct s_stock_str) * (ac + 1));
 if (!tab)
     return (NULL);
+/* ... fill ac elements ... */
+tab[ac].str = 0;   /* sentinel: marks end of array */
 ```
 
-`sizeof(struct s_stock_str)` повертає розмір однієї структури в байтах. Множиш на `ac` -- отримуєш пам'ять для всього масиву.
+`sizeof(struct s_stock_str)` повертає розмір однієї структури в байтах. Множиш на `ac + 1` -- виділяєш місце для всіх елементів + sentinel (маркер кінця). `tab[ac].str = 0` дозволяє `ft_show_tab` ітерувати `while (par[i].str)`.
 
 </details>
 
@@ -169,11 +171,11 @@ if (!tab)
 i = 0;
 while (i < ac)
 {
-    tab[i].size = ft_strlen(av[i]);    // your own strlen
-    tab[i].str = av[i];                // just pointer, NOT copy!
-    tab[i].copy = ft_strdup(av[i]);    // your own strdup (malloc + copy)
+    tab[i].size = ft_strlen(av[i]);    /* your own strlen */
+    tab[i].str = av[i];                /* just pointer, NOT copy! */
+    tab[i].copy = ft_strdup(av[i]);    /* your own strdup (malloc + copy) */
     if (!tab[i].copy)
-        return (NULL);                 // malloc failed
+        return (NULL);                 /* malloc failed */
     i++;
 }
 ```

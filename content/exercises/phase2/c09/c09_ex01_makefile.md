@@ -6,7 +6,7 @@ title: "Makefile"
 difficulty: 3
 xp: 40
 estimated_minutes: 90
-prerequisites: ["c09_ex00_libft", "make_ex02"]
+prerequisites: ["c09_ex00_libft", "make_ex02_full"]
 tags: ["c", "makefile", "library"]
 norminette: false
 man_pages: ["make"]

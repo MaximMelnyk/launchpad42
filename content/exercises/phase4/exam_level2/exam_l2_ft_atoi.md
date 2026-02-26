@@ -44,9 +44,9 @@ int	ft_atoi(char *str);
 ### Example
 
 ```c
-ft_atoi("42");         // returns 42
-ft_atoi("   -42");     // returns -42
-ft_atoi("  +123abc");  // returns 123
-ft_atoi("abc");        // returns 0
-ft_atoi("  \t  567");  // returns 567
+ft_atoi("42");         /* returns 42 */
+ft_atoi("   -42");     /* returns -42 */
+ft_atoi("  +123abc");  /* returns 123 */
+ft_atoi("abc");        /* returns 0 */
+ft_atoi("  \t  567");  /* returns 567 */
 ```

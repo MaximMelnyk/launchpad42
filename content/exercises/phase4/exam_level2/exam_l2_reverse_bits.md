@@ -41,8 +41,8 @@ unsigned char	reverse_bits(unsigned char octet);
 ### Example
 
 ```c
-reverse_bits(0b01000001);  // returns 0b10000010 (65 -> 130)
-reverse_bits(0b11111111);  // returns 0b11111111 (255 -> 255)
-reverse_bits(0b00000000);  // returns 0b00000000 (0 -> 0)
-reverse_bits(0b00000001);  // returns 0b10000000 (1 -> 128)
+reverse_bits(0b01000001);  /* returns 0b10000010 (65 -> 130) */
+reverse_bits(0b11111111);  /* returns 0b11111111 (255 -> 255) */
+reverse_bits(0b00000000);  /* returns 0b00000000 (0 -> 0) */
+reverse_bits(0b00000001);  /* returns 0b10000000 (1 -> 128) */
 ```

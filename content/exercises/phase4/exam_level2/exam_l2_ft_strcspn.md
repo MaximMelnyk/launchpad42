@@ -41,9 +41,9 @@ size_t	ft_strcspn(const char *s, const char *reject);
 ### Example
 
 ```c
-ft_strcspn("hello", "ol");    // returns 2 ('h','e' before 'l')
-ft_strcspn("abcdef", "dc");   // returns 2 ('a','b' before 'c')
-ft_strcspn("hello", "xyz");   // returns 5 (no reject chars found)
-ft_strcspn("hello", "h");     // returns 0 (first char is in reject)
-ft_strcspn("", "abc");        // returns 0
+ft_strcspn("hello", "ol");    /* returns 2 ('h','e' before 'l') */
+ft_strcspn("abcdef", "dc");   /* returns 2 ('a','b' before 'c') */
+ft_strcspn("hello", "xyz");   /* returns 5 (no reject chars found) */
+ft_strcspn("hello", "h");     /* returns 0 (first char is in reject) */
+ft_strcspn("", "abc");        /* returns 0 */
 ```

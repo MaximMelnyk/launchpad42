@@ -80,7 +80,7 @@ while (a <= 7)
 		c = b + 1;
 		while (c <= 9)
 		{
-			// print a, b, c
+			/* print a, b, c */
 			c++;
 		}
 		b++;

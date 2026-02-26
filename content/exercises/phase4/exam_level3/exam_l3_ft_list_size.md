@@ -49,9 +49,9 @@ int	ft_list_size(t_list *begin_list);
 ### Example
 
 ```c
-// List: [A] -> [B] -> [C] -> NULL
-ft_list_size(list);  // returns 3
+/* List: [A] -> [B] -> [C] -> NULL */
+ft_list_size(list);  /* returns 3 */
 
-// Empty list: NULL
-ft_list_size(NULL);  // returns 0
+/* Empty list: NULL */
+ft_list_size(NULL);  /* returns 0 */
 ```

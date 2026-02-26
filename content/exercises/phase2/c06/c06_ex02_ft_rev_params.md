@@ -76,7 +76,7 @@ only
 i = argc - 1;
 while (i > 0)
 {
-	// print argv[i]
+	/* print argv[i] */
 	i--;
 }
 ```

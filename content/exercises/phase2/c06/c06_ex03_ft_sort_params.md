@@ -112,7 +112,7 @@ while (i < argc - 1)
 	while (j < argc - 1)
 	{
 		if (ft_strcmp(argv[j], argv[j + 1]) > 0)
-			// swap argv[j] and argv[j + 1]
+			/* swap argv[j] and argv[j + 1] */
 		j++;
 	}
 	i++;

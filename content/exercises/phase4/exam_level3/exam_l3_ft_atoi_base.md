@@ -50,8 +50,8 @@ int	ft_atoi_base(char *str, char *base);
 ### Example
 
 ```c
-ft_atoi_base("2a", "0123456789abcdef");  // returns 42
-ft_atoi_base("101010", "01");             // returns 42
-ft_atoi_base("  -2a", "0123456789abcdef"); // returns -42
-ft_atoi_base("42", "0123456789");          // returns 42
+ft_atoi_base("2a", "0123456789abcdef");  /* returns 42 */
+ft_atoi_base("101010", "01");             /* returns 42 */
+ft_atoi_base("  -2a", "0123456789abcdef"); /* returns -42 */
+ft_atoi_base("42", "0123456789");          /* returns 42 */
 ```

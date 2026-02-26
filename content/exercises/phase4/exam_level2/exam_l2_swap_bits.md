@@ -41,8 +41,8 @@ unsigned char	swap_bits(unsigned char octet);
 ### Example
 
 ```c
-swap_bits(0b01000001);  // returns 0b00010100 (65 -> 20)
-swap_bits(0b00000000);  // returns 0b00000000 (0 -> 0)
-swap_bits(0b11111111);  // returns 0b11111111 (255 -> 255)
-swap_bits(0b11110000);  // returns 0b00001111 (240 -> 15)
+swap_bits(0b01000001);  /* returns 0b00010100 (65 -> 20) */
+swap_bits(0b00000000);  /* returns 0b00000000 (0 -> 0) */
+swap_bits(0b11111111);  /* returns 0b11111111 (255 -> 255) */
+swap_bits(0b11110000);  /* returns 0b00001111 (240 -> 15) */
 ```

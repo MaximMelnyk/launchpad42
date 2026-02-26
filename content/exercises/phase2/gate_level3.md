@@ -399,36 +399,20 @@ Hello, World, 42
 </details>
 
 <details>
-<summary>Bubble sort -- паттерн напам'ять</summary>
+<summary>Bubble sort -- ключова ідея</summary>
 
-```c
-void	ft_sort_int_tab(int *tab, int size)
-{
-	int	i;
-	int	sorted;
-	int	tmp;
+Bubble sort -- це два вкладених `while`: зовнішній повторює проходи, внутрішній порівнює сусідні елементи.
 
-	sorted = 0;
-	while (!sorted)
-	{
-		sorted = 1;
-		i = 0;
-		while (i < size - 1)
-		{
-			if (tab[i] > tab[i + 1])
-			{
-				tmp = tab[i];
-				tab[i] = tab[i + 1];
-				tab[i + 1] = tmp;
-				sorted = 0;
-			}
-			i++;
-		}
-	}
-}
-```
+**Алгоритм:**
+1. Прапорець `sorted = 0` (масив ще не відсортований)
+2. Зовнішній `while (!sorted)`: кожен прохід починається з `sorted = 1`
+3. Внутрішній `while (i < size - 1)`: порівнюй `tab[i]` та `tab[i + 1]`
+4. Якщо `tab[i] > tab[i + 1]` → swap (три рядки з `tmp`) + встанови `sorted = 0`
+5. Якщо за весь прохід не було жодного swap → масив відсортований, виходимо
 
-Це "optimized" bubble sort: якщо за один прохід не було жодного swap, масив відсортований -- виходимо.
+**Оптимізація:** прапорець `sorted` дозволяє вийти рано, без зайвих проходів.
+
+Спробуй написати сам, перш ніж дивитись на C01 ex08 (`ft_sort_int_tab`).
 
 </details>
 

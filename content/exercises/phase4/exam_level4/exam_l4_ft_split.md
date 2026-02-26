@@ -47,8 +47,8 @@ char  **ft_split(char *str);
 
 ```c
 char **result = ft_split("  hello  world\t42  ");
-// result[0] = "hello"
-// result[1] = "world"
-// result[2] = "42"
-// result[3] = NULL
+/* result[0] = "hello" */
+/* result[1] = "world" */
+/* result[2] = "42" */
+/* result[3] = NULL */
 ```

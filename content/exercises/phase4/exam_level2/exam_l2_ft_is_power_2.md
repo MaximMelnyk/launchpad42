@@ -41,9 +41,9 @@ int	ft_is_power_2(unsigned int n);
 ### Example
 
 ```c
-ft_is_power_2(1);   // returns 1 (2^0)
-ft_is_power_2(2);   // returns 1 (2^1)
-ft_is_power_2(4);   // returns 1 (2^2)
-ft_is_power_2(3);   // returns 0
-ft_is_power_2(0);   // returns 0
+ft_is_power_2(1);   /* returns 1 (2^0) */
+ft_is_power_2(2);   /* returns 1 (2^1) */
+ft_is_power_2(4);   /* returns 1 (2^2) */
+ft_is_power_2(3);   /* returns 0 */
+ft_is_power_2(0);   /* returns 0 */
 ```

@@ -51,6 +51,6 @@ void  ft_list_foreach(t_list *begin_list, void (*f)(void *));
 ### Example
 
 ```c
-// Якщо f = функцiя що друкує рядок, а список мiстить "A" -> "B" -> "C"
-// ft_list_foreach(list, print_str) виведе: ABC
+/* Якщо f = функцiя що друкує рядок, а список мiстить "A" -> "B" -> "C" */
+/* ft_list_foreach(list, print_str) виведе: ABC */
 ```

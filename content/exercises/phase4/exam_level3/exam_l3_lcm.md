@@ -43,9 +43,9 @@ unsigned int	lcm(unsigned int a, unsigned int b);
 ### Example
 
 ```c
-lcm(6, 4);   // returns 12
-lcm(3, 5);   // returns 15
-lcm(0, 5);   // returns 0
-lcm(12, 18); // returns 36
-lcm(1, 1);   // returns 1
+lcm(6, 4);   /* returns 12 */
+lcm(3, 5);   /* returns 15 */
+lcm(0, 5);   /* returns 0 */
+lcm(12, 18); /* returns 36 */
+lcm(1, 1);   /* returns 1 */
 ```
