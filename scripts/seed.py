@@ -130,7 +130,7 @@ def seed_exercises(
     collection = db.collection("exercises") if db else None
 
     for phase_dir in phase_dirs:
-        md_files = sorted(phase_dir.glob("*.md"))
+        md_files = sorted(phase_dir.rglob("*.md"))
         if not md_files:
             log.info("No exercise files in %s", phase_dir.name)
             continue
