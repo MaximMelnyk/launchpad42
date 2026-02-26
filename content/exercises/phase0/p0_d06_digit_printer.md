@@ -11,7 +11,7 @@ tags: ["c", "while", "functions"]
 norminette: true
 man_pages: ["write"]
 multi_day: false
-order: 16
+order: 17
 ---
 
 # ft_print_numbers

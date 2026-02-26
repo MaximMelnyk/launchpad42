@@ -11,7 +11,7 @@ tags: ["c", "write", "basics"]
 norminette: true
 man_pages: ["write"]
 multi_day: false
-order: 3
+order: 4
 ---
 
 # ft_putchar

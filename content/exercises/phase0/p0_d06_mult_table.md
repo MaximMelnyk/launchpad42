@@ -7,11 +7,11 @@ difficulty: 3
 xp: 40
 estimated_minutes: 30
 prerequisites: ["p0_d06_counter"]
-tags: ["c", "while", "loops", "nested", "format"]
+tags: ["c", "while", "loops", "format"]
 norminette: true
 man_pages: ["write"]
 multi_day: false
-order: 15
+order: 16
 ---
 
 # Multiplication Table

@@ -11,7 +11,7 @@ tags: ["c", "while", "loops", "basics"]
 norminette: true
 man_pages: ["write"]
 multi_day: false
-order: 14
+order: 15
 ---
 
 # Counter

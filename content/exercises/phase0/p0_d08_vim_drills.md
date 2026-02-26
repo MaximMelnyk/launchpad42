@@ -11,7 +11,7 @@ tags: ["vim", "tools", "editor"]
 norminette: false
 man_pages: ["vim"]
 multi_day: false
-order: 19
+order: 2
 ---
 
 # Vim Drills

@@ -6,12 +6,12 @@ title: "ft_putnbr"
 difficulty: 2
 xp: 25
 estimated_minutes: 30
-prerequisites: ["p0_d03_variables"]
+prerequisites: ["p0_d05_range_check"]
 tags: ["c", "recursion", "numbers", "int"]
 norminette: true
 man_pages: ["write"]
 multi_day: false
-order: 6
+order: 14
 ---
 
 # ft_putnbr
@@ -19,6 +19,8 @@ order: 6
 ## Завдання
 
 Напиши функцію `ft_putnbr`, яка виводить ціле число на стандартний вивід.
+
+Це твоя **перша рекурсивна функція**! Рекурсія — коли функція викликає сама себе. Ця техніка часто використовується на Piscine, і ft_putnbr — ідеальне місце, щоб з нею познайомитися.
 
 Це одна з найважливіших функцій на Piscine -- ти будеш використовувати її постійно. Вона повинна коректно обробляти:
 - Додатні числа

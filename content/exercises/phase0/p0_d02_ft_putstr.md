@@ -11,7 +11,7 @@ tags: ["c", "strings", "while", "basics"]
 norminette: true
 man_pages: ["write"]
 multi_day: false
-order: 4
+order: 5
 ---
 
 # ft_putstr
