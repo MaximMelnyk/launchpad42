@@ -65,18 +65,31 @@ async def get_today_exercises(uid: str, db: AsyncClient) -> dict:
     # Sort by order field
     exercises.sort(key=lambda e: e.get("order", 0))
 
-    # Filter to exercises appropriate for today
+    # Filter to exercises appropriate for today + unfinished from past days
     today_exercises: list[dict] = []
+    phase_start = PHASE_DAY_RANGES.get(phase, (1, 125))[0]
+
     for ex in exercises:
         ex_order = ex.get("order", 0)
-        # Each exercise is assigned to a specific day within the phase
-        phase_start = PHASE_DAY_RANGES.get(phase, (1, 125))[0]
         ex_day = phase_start + ex_order - 1
+
         if ex_day == current_day:
-            # Check prerequisites
+            # Today's scheduled exercises
             prereqs_met = await check_prerequisites(uid, ex["id"], db)
             ex["prereqs_met"] = prereqs_met
             today_exercises.append(ex)
+        elif ex_day < current_day:
+            # Past exercise — include if started but not completed
+            doc_id = f"{uid}_{ex['id']}"
+            prog_doc = await db.collection("exercise_progress").document(doc_id).get()
+            if prog_doc.exists:
+                prog_data = prog_doc.to_dict()
+                status = prog_data.get("status")
+                if status == ExerciseStatus.IN_PROGRESS.value:
+                    prereqs_met = await check_prerequisites(uid, ex["id"], db)
+                    ex["prereqs_met"] = prereqs_met
+                    ex["carry_over"] = True
+                    today_exercises.append(ex)
 
     # Fetch review cards due today
     review_cards: list[dict] = []

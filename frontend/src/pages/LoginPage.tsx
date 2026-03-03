@@ -26,9 +26,15 @@ export default function LoginPage(): JSX.Element {
     try {
       await signIn();
       navigate('/');
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Помилка входу';
-      setError(message);
+    } catch (err: unknown) {
+      console.error('Sign-in error:', err);
+      const firebaseErr = err as { code?: string; message?: string; customData?: unknown };
+      const details = [
+        firebaseErr.code && `Code: ${firebaseErr.code}`,
+        firebaseErr.message && `Message: ${firebaseErr.message}`,
+        firebaseErr.customData && `Data: ${JSON.stringify(firebaseErr.customData)}`,
+      ].filter(Boolean).join(' | ');
+      setError(details || String(err));
     } finally {
       setSigningIn(false);
     }

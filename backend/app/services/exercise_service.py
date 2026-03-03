@@ -198,20 +198,36 @@ async def submit_exercise(
     # Update current session aggregates (exercises_completed + xp_earned)
     today_str = date.today().isoformat()
     session_doc_id = f"{uid}_{today_str}"
+    session_ref = db.collection("sessions").document(session_doc_id)
     try:
-        await db.collection("sessions").document(session_doc_id).update(
+        await session_ref.update(
             {
                 "exercises_completed": ArrayUnion([exercise_id]),
                 "xp_earned": Increment(xp_earned),
             }
         )
     except Exception:
-        # Session may not exist (exercise submitted outside session flow)
+        # Session doesn't exist yet — auto-create with exercise data
         logger.warning(
-            "Could not update session aggregates",
+            "Session not found, auto-creating for exercise submission",
             uid=uid,
             session_id=session_doc_id,
         )
+        await session_ref.set({
+            "uid": uid,
+            "date": today_str,
+            "mood_start": None,
+            "mood_end": None,
+            "exercises_completed": [exercise_id],
+            "xp_earned": xp_earned,
+            "drill_completed": False,
+            "review_completed": False,
+            "vocab_completed": False,
+            "duration_minutes": 0,
+            "started_at": now,
+            "finished_at": None,
+            "created_at": now,
+        })
 
     # Check level up (import here to avoid circular imports)
     from app.services.gamification_service import check_achievements, check_level_up

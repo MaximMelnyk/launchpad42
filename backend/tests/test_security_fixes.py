@@ -83,6 +83,36 @@ class TestExerciseResubmitPrevention:
         assert result["xp_earned"] > 0
         assert "already_completed" not in result
 
+    @pytest.mark.asyncio
+    async def test_submit_without_session_auto_creates_session(self):
+        """Submitting exercise before starting session should auto-create session."""
+        db = MockFirestoreDB()
+        db.seed("users", TEST_UID, {"xp": 100, "level": 0})
+        db.seed("exercises", "c00_ex00", {
+            "id": "c00_ex00",
+            "module": "c00",
+            "phase": "phase2",
+            "title": "ft_putchar",
+            "difficulty": 1,
+            "xp": 20,
+            "estimated_minutes": 15,
+        })
+        # No session seeded — simulates submit before start_session
+
+        submission = ExerciseSubmission(hash_code="abcd1234", hints_used=0)
+        result = await submit_exercise(TEST_UID, "c00_ex00", submission, db)
+
+        assert result["xp_earned"] > 0
+
+        # Session should have been auto-created with exercise data
+        today_str = date.today().isoformat()
+        session_doc_id = f"{TEST_UID}_{today_str}"
+        session_data = db._collections["sessions"][session_doc_id]
+        assert "c00_ex00" in session_data["exercises_completed"]
+        assert session_data["xp_earned"] == result["xp_earned"]
+        assert session_data["uid"] == TEST_UID
+        assert session_data["date"] == today_str
+
 
 # --- P1-5: Drill XP Farming Prevention ---
 
