@@ -60,8 +60,9 @@ async def analyze_weekly_integrity(
         completed_at = _ensure_aware(data.get("completed_at"))
         if not completed_at:
             continue
-        # Only this week's completions
-        if completed_at.date() < monday or completed_at.date() > today:
+        # Only this week's completions (France timezone for consistency)
+        france_date = completed_at.astimezone(FRANCE_TZ).date()
+        if france_date < monday or france_date > today:
             continue
         completions.append({
             "exercise_id": data.get("exercise_id"),

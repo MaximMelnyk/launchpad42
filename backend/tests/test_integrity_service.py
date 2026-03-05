@@ -108,13 +108,9 @@ async def test_normal_speed_not_flagged(integrity_db):
 async def test_unusual_hours_flagged(integrity_db):
     """Submissions at 3 AM (France time) are flagged."""
     from datetime import date, timedelta
-    today = date.today()
-    monday = today - timedelta(days=today.weekday())
-    # 2 AM UTC = 3 AM France (CET)
-    night_time = datetime(
-        monday.year, monday.month, monday.day, 2, 0,
-        tzinfo=timezone.utc,
-    )
+    # Fixed winter date (CET, UTC+1): 2 AM UTC = 3 AM France
+    winter_monday = date(2026, 1, 5)  # a Monday in January
+    night_time = datetime(2026, 1, 5, 2, 0, tzinfo=timezone.utc)
     integrity_db.seed(
         "exercise_progress",
         f"{TEST_UID}_c02_ex00_ft_strcpy",
@@ -127,7 +123,11 @@ async def test_unusual_hours_flagged(integrity_db):
         },
     )
 
-    result = await analyze_weekly_integrity(TEST_UID, integrity_db)
+    result = await analyze_weekly_integrity(
+        TEST_UID, integrity_db,
+        week_start=winter_monday,
+        reference_date=date(2026, 1, 9),
+    )
     assert len(result["unusual_hours"]) == 1
     assert result["unusual_hours"][0]["hour"] == 3
 
@@ -136,13 +136,9 @@ async def test_unusual_hours_flagged(integrity_db):
 async def test_daytime_not_flagged(integrity_db):
     """Submissions at 3 PM are not flagged as unusual."""
     from datetime import date, timedelta
-    today = date.today()
-    monday = today - timedelta(days=today.weekday())
-    # 14 UTC = 15 France
-    day_time = datetime(
-        monday.year, monday.month, monday.day, 14, 0,
-        tzinfo=timezone.utc,
-    )
+    # Fixed winter date (CET, UTC+1): 14 UTC = 15 France
+    winter_monday = date(2026, 1, 5)
+    day_time = datetime(2026, 1, 5, 14, 0, tzinfo=timezone.utc)
     integrity_db.seed(
         "exercise_progress",
         f"{TEST_UID}_c02_ex00_ft_strcpy",
@@ -155,7 +151,11 @@ async def test_daytime_not_flagged(integrity_db):
         },
     )
 
-    result = await analyze_weekly_integrity(TEST_UID, integrity_db)
+    result = await analyze_weekly_integrity(
+        TEST_UID, integrity_db,
+        week_start=winter_monday,
+        reference_date=date(2026, 1, 9),
+    )
     assert len(result["unusual_hours"]) == 0
 
 
