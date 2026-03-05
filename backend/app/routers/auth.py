@@ -5,8 +5,9 @@ from datetime import datetime, timezone
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, status
 from google.cloud.firestore_v1 import AsyncClient
+from google.cloud.firestore_v1.base_query import FieldFilter
 
-from app.core.auth import get_uid
+from app.core.auth import get_uid, require_registered_user
 from app.core.firebase import get_db
 from app.models.user import UserProfile, UserProfileUpdate
 from app.services.curriculum_service import get_current_day, get_phase_for_day
@@ -28,9 +29,30 @@ async def get_profile(
     computed_phase = get_phase_for_day(computed_day)
 
     if not doc.exists:
-        # Auto-create profile for new user with computed values
+        # Single-user platform: block login from a second Google account
+        async for existing_doc in db.collection("users").limit(1).stream():
+            logger.warning(
+                "Login attempt from wrong Google account",
+                attempted_uid=uid,
+                existing_uid=existing_doc.id,
+            )
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="wrong_account",
+            )
+
+        # First-ever login: auto-create profile with telegram_chat_id from links
+        telegram_chat_id = None
+        tg_query = db.collection("telegram_links").where(
+            filter=FieldFilter("role", "==", "student")
+        )
+        async for tg_doc in tg_query.stream():
+            telegram_chat_id = tg_doc.to_dict().get("chat_id")
+            break
+
         profile = UserProfile(
             uid=uid, phase=computed_phase, current_day=computed_day,
+            telegram_chat_id=telegram_chat_id,
         )
         await db.collection("users").document(uid).set(profile.model_dump())
         logger.info("Auto-created user profile", uid=uid)
@@ -58,7 +80,7 @@ async def get_profile(
 @router.put("/profile")
 async def update_profile(
     data: UserProfileUpdate,
-    uid: str = Depends(get_uid),
+    uid: str = Depends(require_registered_user),
     db: AsyncClient = Depends(get_db),
 ) -> UserProfile:
     """Update user profile (display_name, mood_today, pause_mode only)."""

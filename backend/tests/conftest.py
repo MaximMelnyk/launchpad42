@@ -50,6 +50,9 @@ class MockQuery:
     def where(self, **kwargs):
         return self
 
+    def order_by(self, field: str, **kwargs):
+        return self
+
     def limit(self, n: int):
         return self
 
@@ -122,6 +125,9 @@ class MockCollectionRef:
             for doc_id, data in self._docs.items()
         ]
         return MockQuery(query_docs)
+
+    def order_by(self, field: str, **kwargs):
+        return self.where()
 
     def limit(self, n: int):
         return self.where()

@@ -22,7 +22,7 @@ from tests.conftest import MockFirestoreDB, TEST_UID
 
 def _create_app(db: MockFirestoreDB) -> FastAPI:
     """Build FastAPI app with all routers, auth + db overridden."""
-    from app.core.auth import get_uid
+    from app.core.auth import get_uid, require_registered_user
     from app.core.firebase import get_db
     from app.routers import (
         auth, curriculum, dashboard, exam,
@@ -40,6 +40,7 @@ def _create_app(db: MockFirestoreDB) -> FastAPI:
     app.include_router(dashboard.router, prefix="/dashboard")
 
     app.dependency_overrides[get_uid] = lambda: TEST_UID
+    app.dependency_overrides[require_registered_user] = lambda: TEST_UID
     app.dependency_overrides[get_db] = lambda: db
     return app
 

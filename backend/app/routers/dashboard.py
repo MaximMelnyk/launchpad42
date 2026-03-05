@@ -4,7 +4,7 @@ import structlog
 from fastapi import APIRouter, Depends, HTTPException, status
 from google.cloud.firestore_v1 import AsyncClient
 
-from app.core.auth import get_uid
+from app.core.auth import require_registered_user
 from app.core.firebase import get_db
 from app.core.utils import camel_dict
 from app.models.user import UserProfile
@@ -20,7 +20,7 @@ router = APIRouter()
 
 @router.get("")
 async def get_dashboard(
-    uid: str = Depends(get_uid),
+    uid: str = Depends(require_registered_user),
     db: AsyncClient = Depends(get_db),
 ) -> dict:
     """Aggregated dashboard data: user + session + exercises + achievements + gamification."""

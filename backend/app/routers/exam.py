@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from google.cloud.firestore_v1 import AsyncClient
 from pydantic import Field
 
-from app.core.auth import get_uid
+from app.core.auth import require_registered_user
 from app.core.firebase import get_db
 from app.core.utils import camel_dict
 from app.models import CamelModel
@@ -32,7 +32,7 @@ class ExamSubmitRequest(CamelModel):
 @router.post("/start")
 async def start_exam_route(
     data: ExamStartRequest,
-    uid: str = Depends(get_uid),
+    uid: str = Depends(require_registered_user),
     db: AsyncClient = Depends(get_db),
 ) -> dict:
     """Start a new exam. Checks cooldown and attempt limits first."""
@@ -50,7 +50,7 @@ async def start_exam_route(
 async def submit_exam(
     exam_id: str,
     data: ExamSubmitRequest,
-    uid: str = Depends(get_uid),
+    uid: str = Depends(require_registered_user),
     db: AsyncClient = Depends(get_db),
 ) -> dict:
     """Submit an exercise answer during exam."""
@@ -69,7 +69,7 @@ async def submit_exam(
 @router.get("/{exam_id}")
 async def get_exam(
     exam_id: str,
-    uid: str = Depends(get_uid),
+    uid: str = Depends(require_registered_user),
     db: AsyncClient = Depends(get_db),
 ) -> dict:
     """Get exam status with time remaining."""
@@ -86,7 +86,7 @@ async def get_exam(
 @router.get("/cooldown/{exam_type}")
 async def check_cooldown(
     exam_type: str,
-    uid: str = Depends(get_uid),
+    uid: str = Depends(require_registered_user),
     db: AsyncClient = Depends(get_db),
 ) -> dict:
     """Check cooldown status for an exam type."""

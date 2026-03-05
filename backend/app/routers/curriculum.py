@@ -4,7 +4,7 @@ import structlog
 from fastapi import APIRouter, Depends, HTTPException, status
 from google.cloud.firestore_v1 import AsyncClient
 
-from app.core.auth import get_uid
+from app.core.auth import require_registered_user
 from app.core.firebase import get_db
 from app.core.utils import camel_dict
 from app.models.exercise import Exercise, ExerciseSubmission
@@ -16,7 +16,7 @@ router = APIRouter()
 
 @router.get("/today")
 async def get_today(
-    uid: str = Depends(get_uid),
+    uid: str = Depends(require_registered_user),
     db: AsyncClient = Depends(get_db),
 ) -> dict:
     """Returns {exercises, reviewCards, drill, currentDay, phase}."""
@@ -27,7 +27,7 @@ async def get_today(
 @router.get("/exercises/{exercise_id}")
 async def get_exercise(
     exercise_id: str,
-    uid: str = Depends(get_uid),
+    uid: str = Depends(require_registered_user),
     db: AsyncClient = Depends(get_db),
 ) -> dict:
     """Get exercise details with progress status."""
@@ -54,7 +54,7 @@ async def get_exercise(
 @router.get("/phase/{phase}")
 async def get_phase(
     phase: str,
-    uid: str = Depends(get_uid),
+    uid: str = Depends(require_registered_user),
     db: AsyncClient = Depends(get_db),
 ) -> list[dict]:
     """All exercises for a phase, with progress status for each."""
@@ -84,7 +84,7 @@ async def get_phase(
 async def submit_exercise(
     exercise_id: str,
     submission: ExerciseSubmission,
-    uid: str = Depends(get_uid),
+    uid: str = Depends(require_registered_user),
     db: AsyncClient = Depends(get_db),
 ) -> dict:
     """Submit exercise completion.

@@ -4,7 +4,7 @@ import structlog
 from fastapi import APIRouter, Depends, HTTPException, status
 from google.cloud.firestore_v1 import AsyncClient
 
-from app.core.auth import get_uid
+from app.core.auth import require_registered_user
 from app.core.firebase import get_db
 from app.models.session import Session, SessionEnd, SessionStart
 from app.services import session_service
@@ -16,7 +16,7 @@ router = APIRouter()
 @router.post("/start")
 async def start(
     data: SessionStart,
-    uid: str = Depends(get_uid),
+    uid: str = Depends(require_registered_user),
     db: AsyncClient = Depends(get_db),
 ) -> Session:
     """Start a new daily session with mood check-in."""
@@ -26,7 +26,7 @@ async def start(
 @router.post("/end")
 async def end(
     data: SessionEnd,
-    uid: str = Depends(get_uid),
+    uid: str = Depends(require_registered_user),
     db: AsyncClient = Depends(get_db),
 ) -> Session:
     """End today's session."""
@@ -43,7 +43,7 @@ async def end(
 
 @router.get("/current")
 async def current(
-    uid: str = Depends(get_uid),
+    uid: str = Depends(require_registered_user),
     db: AsyncClient = Depends(get_db),
 ) -> Session | None:
     """Returns current session or null."""

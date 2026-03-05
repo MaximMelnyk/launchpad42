@@ -3,15 +3,22 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import styles from './LoginPage.module.css';
+
+const WRONG_ACCOUNT_MSG =
+  'Ти увійшов з іншого Google акаунту. ' +
+  'Використовуй той самий акаунт, з якого реєструвався вперше.';
 
 export default function LoginPage(): JSX.Element {
   const { user, loading, signIn } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [signingIn, setSigningIn] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(
+    searchParams.get('error') === 'wrong_account' ? WRONG_ACCOUNT_MSG : null,
+  );
 
   // Redirect if already authenticated — in useEffect, not during render
   useEffect(() => {

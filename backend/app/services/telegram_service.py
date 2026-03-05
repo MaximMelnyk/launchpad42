@@ -119,21 +119,25 @@ async def _record_failed_attempt(chat_id: int, db: AsyncClient) -> None:
 
 
 async def _get_student_uid(db: AsyncClient) -> str | None:
-    """Get the single student's UID (1-user platform)."""
+    """Get the single student's UID (1-user platform).
+
+    Lookup chain: telegram_links(student) -> chat_id -> users(telegram_chat_id).
+    Fallback: oldest user by created_at (deterministic for 1-user platform).
+    """
     query = db.collection("telegram_links").where(
         filter=FieldFilter("role", "==", TelegramRole.STUDENT.value)
     )
     async for doc in query.stream():
         data = doc.to_dict()
-        # Find user by telegram_chat_id
         chat_id = data.get("chat_id")
         users_query = db.collection("users").where(
             filter=FieldFilter("telegram_chat_id", "==", chat_id)
         )
         async for user_doc in users_query.stream():
             return user_doc.id
-    # Fallback: get first user
-    async for user_doc in db.collection("users").limit(1).stream():
+    # Fallback: oldest user (deterministic, avoids non-deterministic limit(1))
+    fallback_query = db.collection("users").order_by("created_at").limit(1)
+    async for user_doc in fallback_query.stream():
         return user_doc.id
     return None
 

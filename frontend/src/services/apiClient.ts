@@ -29,6 +29,20 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
     throw new Error('Unauthorized');
   }
 
+  if (res.status === 403) {
+    const err = await res.json().catch(() => ({ detail: 'Forbidden' }));
+    if (err.detail === 'wrong_account') {
+      // Sign out from wrong account and redirect with error
+      try {
+        const { firebaseAuth } = await import('@/hooks/useAuth');
+        await firebaseAuth.signOut();
+      } catch { /* redirect even if sign-out fails */ }
+      window.location.href = '/login?error=wrong_account';
+      throw new Error('wrong_account');
+    }
+    throw new Error(err.detail || `HTTP 403`);
+  }
+
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: 'Unknown error' }));
     throw new Error(err.detail || `HTTP ${res.status}`);

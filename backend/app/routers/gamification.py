@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from google.cloud.firestore_v1 import AsyncClient
 from pydantic import Field
 
-from app.core.auth import get_uid
+from app.core.auth import require_registered_user
 from app.core.firebase import get_db
 from app.core.utils import camel_dict
 from app.models import CamelModel
@@ -31,7 +31,7 @@ class ReviewSubmitRequest(CamelModel):
 
 @router.get("/profile")
 async def gamification_profile(
-    uid: str = Depends(get_uid),
+    uid: str = Depends(require_registered_user),
     db: AsyncClient = Depends(get_db),
 ) -> dict:
     """Get gamification profile: level, XP, streak, shields, phase."""
@@ -47,7 +47,7 @@ async def gamification_profile(
 
 @router.get("/achievements")
 async def achievements(
-    uid: str = Depends(get_uid),
+    uid: str = Depends(require_registered_user),
     db: AsyncClient = Depends(get_db),
 ) -> list[dict]:
     """Get all achievements with unlock status."""
@@ -58,7 +58,7 @@ async def achievements(
 @router.post("/drill/verify")
 async def verify_drill(
     data: DrillVerifyRequest,
-    uid: str = Depends(get_uid),
+    uid: str = Depends(require_registered_user),
     db: AsyncClient = Depends(get_db),
 ) -> dict:
     """Verify drill attempt.
@@ -76,7 +76,7 @@ async def verify_drill(
 @router.post("/review")
 async def submit_review(
     data: ReviewSubmitRequest,
-    uid: str = Depends(get_uid),
+    uid: str = Depends(require_registered_user),
     db: AsyncClient = Depends(get_db),
 ) -> dict:
     """Submit review card answer.
@@ -98,7 +98,7 @@ async def submit_review(
 
 @router.post("/streak")
 async def update_streak_route(
-    uid: str = Depends(get_uid),
+    uid: str = Depends(require_registered_user),
     db: AsyncClient = Depends(get_db),
 ) -> dict:
     """Update and return streak info."""
