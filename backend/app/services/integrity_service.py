@@ -147,13 +147,16 @@ async def analyze_weekly_integrity(
 
 
 async def get_weekly_tutor_usage(
-    uid: str, db: AsyncClient, week_start: date | None = None
+    uid: str,
+    db: AsyncClient,
+    week_start: date | None = None,
+    reference_date: date | None = None,
 ) -> dict:
     """Query tutor_usage collection for the week.
 
     Returns {total_questions, days_used}.
     """
-    today = datetime.now(FRANCE_TZ).date()
+    today = reference_date or datetime.now(FRANCE_TZ).date()
     monday = week_start or (today - timedelta(days=today.weekday()))
 
     total_questions = 0

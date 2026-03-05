@@ -301,7 +301,9 @@ async def test_tutor_usage_counted(integrity_db):
             {"uid": TEST_UID, "date": d.isoformat(), "count": 5},
         )
 
-    result = await get_weekly_tutor_usage(TEST_UID, integrity_db, week_start=MONDAY)
+    result = await get_weekly_tutor_usage(
+        TEST_UID, integrity_db, week_start=MONDAY, reference_date=FRIDAY,
+    )
     assert result["total_questions"] == 15
     assert result["days_used"] == 3
 
@@ -309,7 +311,9 @@ async def test_tutor_usage_counted(integrity_db):
 @pytest.mark.asyncio
 async def test_tutor_not_used(integrity_db):
     """No tutor usage returns zeros."""
-    result = await get_weekly_tutor_usage(TEST_UID, integrity_db, week_start=MONDAY)
+    result = await get_weekly_tutor_usage(
+        TEST_UID, integrity_db, week_start=MONDAY, reference_date=FRIDAY,
+    )
     assert result["total_questions"] == 0
     assert result["days_used"] == 0
 
