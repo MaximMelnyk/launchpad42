@@ -30,7 +30,7 @@ START_COOLDOWN_MINUTES = 60
 
 # Role constants
 STUDENT_COMMANDS = {"/start", "/today", "/progress", "/drill", "/hint", "/skip", "/mood"}
-MOTHER_COMMANDS = {"/start", "/today", "/week", "/streak", "/level"}
+MOTHER_COMMANDS = {"/start", "/today", "/week", "/streak", "/level", "/integrity"}
 
 # Mood emoji mapping
 MOOD_OPTIONS = {
@@ -665,6 +665,99 @@ async def mother_level(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     )
 
 
+async def mother_integrity(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """On-demand integrity check — anomalies for current week."""
+    db = await _get_db_from_context(context)
+    if db is None:
+        await update.message.reply_text("Bot is initializing.")
+        return
+
+    if not await _require_linked(update, db):
+        return
+
+    chat_id = update.effective_chat.id
+    role = await _get_role(chat_id, db)
+    if role != TelegramRole.MOTHER:
+        await update.message.reply_text("Ця команда тільки для спостерігача.")
+        return
+
+    uid = await _get_student_uid(db)
+    if not uid:
+        await update.message.reply_text("Студент ще не зареєстрований.")
+        return
+
+    from app.services.integrity_service import (
+        analyze_weekly_integrity,
+        get_weekly_tutor_usage,
+    )
+
+    try:
+        integrity = await analyze_weekly_integrity(uid, db)
+        tutor = await get_weekly_tutor_usage(uid, db)
+    except Exception:
+        logger.exception("Failed to run integrity check")
+        await update.message.reply_text("Помилка при аналізі даних.")
+        return
+
+    lines: list[str] = ["Перевірка цілісності (поточний тиждень):\n"]
+
+    # Exercises analyzed
+    lines.append(f"Вправ проаналізовано: {integrity['exercises_analyzed']}")
+
+    # Tutor usage
+    if tutor["total_questions"] > 0:
+        lines.append(
+            f"Тютор: {tutor['total_questions']} питань "
+            f"за {tutor['days_used']} дн."
+        )
+    else:
+        lines.append("Тютор: не використовувався")
+
+    # Speed anomalies
+    if integrity["speed_anomalies"]:
+        lines.append(f"\nШвидкісні аномалії ({len(integrity['speed_anomalies'])}):")
+        for sa in integrity["speed_anomalies"]:
+            lines.append(
+                f"  {sa['exercise_id']}: "
+                f"{sa['actual_minutes']} хв з {sa['expected_minutes']} хв "
+                f"({sa['ratio_pct']}%)"
+            )
+
+    # Bulk completions
+    if integrity["bulk_completions"]:
+        lines.append(f"\nМасове виконання ({len(integrity['bulk_completions'])}):")
+        for bc in integrity["bulk_completions"]:
+            lines.append(
+                f"  {bc['count']} вправ за 1 годину ({bc['window_start']})"
+            )
+
+    # Unusual hours
+    if integrity["unusual_hours"]:
+        night_count = len(integrity["unusual_hours"])
+        lines.append(f"\nНiчнi подачi (00:00-06:00): {night_count}")
+
+    # Consistently fast
+    if integrity["consistently_fast"]:
+        lines.append(
+            f"\nСередній час: {integrity['avg_time_ratio_pct']}% "
+            f"від очікуваного ({integrity['exercises_analyzed']} вправ)"
+        )
+
+    # Verdict
+    has_flags = (
+        integrity["speed_anomalies"]
+        or integrity["bulk_completions"]
+        or integrity["unusual_hours"]
+        or integrity["consistently_fast"]
+    )
+    if has_flags:
+        lines.append("\n(!) Є відхилення від норми")
+    else:
+        lines.append("\nВсе в нормі.")
+
+    await update.message.reply_text("\n".join(lines))
+
+
 # --- Reports ---
 
 
@@ -869,6 +962,7 @@ def setup_bot(token: str) -> Application:
     app.add_handler(CommandHandler("week", mother_week))
     app.add_handler(CommandHandler("streak", mother_streak))
     app.add_handler(CommandHandler("level", mother_level))
+    app.add_handler(CommandHandler("integrity", mother_integrity))
 
     # Callback handlers
     app.add_handler(CallbackQueryHandler(_handle_mood_callback, pattern=r"^mood_"))
