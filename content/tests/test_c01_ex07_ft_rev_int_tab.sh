@@ -5,6 +5,9 @@ set -e
 
 EXERCISE_ID="c01_ex07_ft_rev_int_tab"
 SRC_DIR="${1:-.}"
+# Track compilation attempts
+_HELPERS="$(dirname "$0")/_helpers.sh"
+[ -f "$_HELPERS" ] && . "$_HELPERS" && track_compile "$EXERCISE_ID" "$SRC_DIR"
 
 echo "=== Testing: ${EXERCISE_ID} ==="
 echo "(C01 ex07: ft_rev_int_tab — reverse int array in-place)"
@@ -325,5 +328,6 @@ rm -f /tmp/${EXERCISE_ID}_test4 /tmp/${EXERCISE_ID}_main4.c
 HASH=$(echo -n "${USER}-${EXERCISE_ID}-$(date +%Y%m%d)" | sha256sum | cut -c1-8)
 echo ""
 echo "ALL TESTS PASSED"
+    show_compile_count
 echo "Code: $HASH"
 exit 0

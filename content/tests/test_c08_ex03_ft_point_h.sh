@@ -5,6 +5,9 @@ set -e
 
 EXERCISE_ID="c08_ex03_ft_point_h"
 SRC_DIR="${1:-.}"
+# Track compilation attempts
+_HELPERS="$(dirname "$0")/_helpers.sh"
+[ -f "$_HELPERS" ] && . "$_HELPERS" && track_compile "$EXERCISE_ID" "$SRC_DIR"
 
 echo "=== Testing: ${EXERCISE_ID} ==="
 echo "(C08 ex03: ft_point.h — struct s_point / t_point)"
@@ -260,5 +263,6 @@ rm -f /tmp/${EXERCISE_ID}_test1 /tmp/${EXERCISE_ID}_test2 /tmp/${EXERCISE_ID}_te
 HASH=$(echo -n "${USER}-${EXERCISE_ID}-$(date +%Y%m%d)" | sha256sum | cut -c1-8)
 echo ""
 echo "ALL TESTS PASSED"
+    show_compile_count
 echo "Code: $HASH"
 exit 0

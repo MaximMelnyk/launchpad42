@@ -5,6 +5,9 @@ set -e
 
 EXERCISE_ID="sh00_ex05_git_commit"
 SRC_DIR="${1:-.}"
+# Track compilation attempts
+_HELPERS="$(dirname "$0")/_helpers.sh"
+[ -f "$_HELPERS" ] && . "$_HELPERS" && track_compile "$EXERCISE_ID" "$SRC_DIR"
 
 echo "=== Testing: ${EXERCISE_ID} ==="
 
@@ -74,5 +77,6 @@ echo "  Format: OK (all lines are 8 hex chars)"
 # All tests passed
 HASH=$(echo -n "${USER}-${EXERCISE_ID}-$(date +%Y%m%d)" | sha256sum | cut -c1-8)
 echo "ALL TESTS PASSED"
+    show_compile_count
 echo "Code: $HASH"
 exit 0

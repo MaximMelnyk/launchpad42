@@ -5,6 +5,9 @@
 
 EXERCISE_ID="gate_level3"
 SRC_DIR="${1:-.}"
+# Track compilation attempts
+_HELPERS="$(dirname "$0")/_helpers.sh"
+[ -f "$_HELPERS" ] && . "$_HELPERS" && track_compile "$EXERCISE_ID" "$SRC_DIR"
 
 echo "========================================="
 echo "  ADVANCED C GATE EXAM (LEVEL 3)"
@@ -465,6 +468,7 @@ if [ "$SCORE" -ge 3 ]; then
     else
         echo "EXAM PASSED! Well done."
     fi
+    show_compile_count
     echo "Code: $HASH"
     echo ""
     echo "Phase 3 (C10+) unlocked. Congratulations!"

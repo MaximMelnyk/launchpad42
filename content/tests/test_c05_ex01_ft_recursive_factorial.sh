@@ -5,6 +5,9 @@ set -e
 
 EXERCISE_ID="c05_ex01_ft_recursive_factorial"
 SRC_DIR="${1:-.}"
+# Track compilation attempts
+_HELPERS="$(dirname "$0")/_helpers.sh"
+[ -f "$_HELPERS" ] && . "$_HELPERS" && track_compile "$EXERCISE_ID" "$SRC_DIR"
 
 echo "=== Testing: ${EXERCISE_ID} ==="
 echo "(C05: ft_recursive_factorial)"
@@ -214,5 +217,6 @@ rm -f /tmp/${EXERCISE_ID}_test3 /tmp/${EXERCISE_ID}_main.c
 HASH=$(echo -n "${USER}-${EXERCISE_ID}-$(date +%Y%m%d)" | sha256sum | cut -c1-8)
 echo ""
 echo "ALL TESTS PASSED"
+    show_compile_count
 echo "Code: $HASH"
 exit 0

@@ -5,6 +5,9 @@ set -e
 
 EXERCISE_ID="exam_l0_aff_first_param"
 SRC_DIR="${1:-.}"
+# Track compilation attempts
+_HELPERS="$(dirname "$0")/_helpers.sh"
+[ -f "$_HELPERS" ] && . "$_HELPERS" && track_compile "$EXERCISE_ID" "$SRC_DIR"
 
 echo "=== Testing: ${EXERCISE_ID} ==="
 echo "(Exam Level 0: Print first argument)"
@@ -120,5 +123,6 @@ fi
 HASH=$(echo -n "${USER}-${EXERCISE_ID}-$(date +%Y%m%d)" | sha256sum | cut -c1-8)
 echo ""
 echo "ALL TESTS PASSED"
+    show_compile_count
 echo "Code: $HASH"
 exit 0

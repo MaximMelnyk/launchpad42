@@ -5,6 +5,9 @@ set -e
 
 EXERCISE_ID="c09_ex02_ft_split_charset"
 SRC_DIR="${1:-.}"
+# Track compilation attempts
+_HELPERS="$(dirname "$0")/_helpers.sh"
+[ -f "$_HELPERS" ] && . "$_HELPERS" && track_compile "$EXERCISE_ID" "$SRC_DIR"
 
 echo "=== Testing: ${EXERCISE_ID} ==="
 echo "(C09 ex02: ft_split charset — split by set of delimiters)"
@@ -267,5 +270,6 @@ rm -f /tmp/${EXERCISE_ID}_test /tmp/${EXERCISE_ID}_main.c /tmp/${EXERCISE_ID}_ed
 HASH=$(echo -n "${USER}-${EXERCISE_ID}-$(date +%Y%m%d)" | sha256sum | cut -c1-8)
 echo ""
 echo "ALL TESTS PASSED"
+    show_compile_count
 echo "Code: $HASH"
 exit 0

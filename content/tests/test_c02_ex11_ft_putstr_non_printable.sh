@@ -5,6 +5,9 @@ set -e
 
 EXERCISE_ID="c02_ex11_ft_putstr_non_printable"
 SRC_DIR="${1:-.}"
+# Track compilation attempts
+_HELPERS="$(dirname "$0")/_helpers.sh"
+[ -f "$_HELPERS" ] && . "$_HELPERS" && track_compile "$EXERCISE_ID" "$SRC_DIR"
 PASS=0
 FAIL=0
 
@@ -164,6 +167,7 @@ if [ $FAIL -eq 0 ]; then
     HASH=$(echo -n "${USER}-${EXERCISE_ID}-$(date +%Y%m%d)" | sha256sum | cut -c1-8)
     echo ""
     echo "ALL TESTS PASSED"
+    show_compile_count
     echo "Code: $HASH"
     exit 0
 else

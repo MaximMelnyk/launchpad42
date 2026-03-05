@@ -5,6 +5,9 @@ set -e
 
 EXERCISE_ID="c04_ex05_ft_atoi_base"
 SRC_DIR="${1:-.}"
+# Track compilation attempts
+_HELPERS="$(dirname "$0")/_helpers.sh"
+[ -f "$_HELPERS" ] && . "$_HELPERS" && track_compile "$EXERCISE_ID" "$SRC_DIR"
 
 echo "=== Testing: ${EXERCISE_ID} ==="
 echo "(C04: ft_atoi_base)"
@@ -321,5 +324,6 @@ rm -f /tmp/${EXERCISE_ID}_test5 /tmp/${EXERCISE_ID}_main.c
 HASH=$(echo -n "${USER}-${EXERCISE_ID}-$(date +%Y%m%d)" | sha256sum | cut -c1-8)
 echo ""
 echo "ALL TESTS PASSED"
+    show_compile_count
 echo "Code: $HASH"
 exit 0

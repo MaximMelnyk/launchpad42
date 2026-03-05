@@ -6,6 +6,9 @@ set -e
 
 EXERCISE_ID="p0_d10_gate_exam"
 SRC_DIR="${1:-.}"
+# Track compilation attempts
+_HELPERS="$(dirname "$0")/_helpers.sh"
+[ -f "$_HELPERS" ] && . "$_HELPERS" && track_compile "$EXERCISE_ID" "$SRC_DIR"
 
 echo "========================================="
 echo "  PHASE 0 GATE EXAM — Automated Grader"
@@ -242,6 +245,7 @@ if [ "$SCORE" -ge 4 ]; then
     if [ "$SCORE" -eq 5 ]; then
         echo "PERFECT SCORE! +50 bonus XP"
     fi
+    show_compile_count
     echo "Code: $HASH"
     echo ""
     echo "Phase 1 unlocked. Congratulations!"

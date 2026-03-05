@@ -6,6 +6,9 @@ set -e
 
 EXERCISE_ID="gate_level2"
 SRC_DIR="${1:-.}"
+# Track compilation attempts
+_HELPERS="$(dirname "$0")/_helpers.sh"
+[ -f "$_HELPERS" ] && . "$_HELPERS" && track_compile "$EXERCISE_ID" "$SRC_DIR"
 
 echo "========================================="
 echo "  C CORE GATE EXAM (LEVEL 2)"
@@ -295,6 +298,7 @@ if [ "$SCORE" -ge 2 ]; then
     else
         echo "EXAM PASSED! Well done."
     fi
+    show_compile_count
     echo "Code: $HASH"
     echo ""
     echo "C06+ unlocked. Congratulations!"

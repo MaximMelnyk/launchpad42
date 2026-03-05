@@ -669,7 +669,7 @@ async def mother_level(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 
 async def _generate_weekly_report(uid: str, db: AsyncClient) -> str:
-    """Generate weekly summary text."""
+    """Generate weekly summary text with integrity monitoring and tutor usage."""
     user_doc = await db.collection("users").document(uid).get()
     if not user_doc.exists:
         return "Профіль студента не знайдено."
@@ -710,6 +710,72 @@ async def _generate_weekly_report(uid: str, db: AsyncClient) -> str:
         f"Фаза: {phase}\n\n"
         f"Загальний XP: {u.get('xp', 0)}"
     )
+
+    # Integrity monitoring section
+    from app.services.integrity_service import (
+        analyze_weekly_integrity,
+        get_weekly_tutor_usage,
+    )
+
+    try:
+        integrity = await analyze_weekly_integrity(uid, db, monday)
+        tutor = await get_weekly_tutor_usage(uid, db, monday)
+
+        monitor_lines: list[str] = []
+
+        # Tutor usage
+        if tutor["total_questions"] > 0:
+            monitor_lines.append(
+                f"Тютор: {tutor['total_questions']} питань "
+                f"за {tutor['days_used']} дн."
+            )
+        else:
+            monitor_lines.append("Тютор: не використовувався")
+
+        # Speed anomalies
+        for sa in integrity["speed_anomalies"]:
+            monitor_lines.append(
+                f"  {sa['exercise_id']}: "
+                f"{sa['actual_minutes']} хв з {sa['expected_minutes']} хв "
+                f"({sa['ratio_pct']}%)"
+            )
+
+        # Bulk completions
+        for bc in integrity["bulk_completions"]:
+            monitor_lines.append(
+                f"  {bc['count']} вправ за 1 годину ({bc['window_start']})"
+            )
+
+        # Unusual hours
+        if integrity["unusual_hours"]:
+            night_count = len(integrity["unusual_hours"])
+            monitor_lines.append(
+                f"  Нiчнi подачi (00:00-06:00): {night_count}"
+            )
+
+        # Consistently fast
+        if integrity["consistently_fast"]:
+            monitor_lines.append(
+                f"  Середній час: {integrity['avg_time_ratio_pct']}% "
+                f"від очікуваного ({integrity['exercises_analyzed']} вправ)"
+            )
+
+        # Build section header based on flags
+        has_flags = (
+            integrity["speed_anomalies"]
+            or integrity["bulk_completions"]
+            or integrity["unusual_hours"]
+            or integrity["consistently_fast"]
+        )
+
+        report += "\n\n--- Моніторинг ---"
+        report += "\n" + "\n".join(monitor_lines)
+
+        if has_flags:
+            report += "\n(!) Є відхилення від норми"
+
+    except Exception:
+        logger.exception("Failed to generate integrity report")
 
     return report
 

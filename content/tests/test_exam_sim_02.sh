@@ -6,6 +6,9 @@
 
 EXERCISE_ID="exam_sim_02"
 SRC_DIR="${1:-.}"
+# Track compilation attempts
+_HELPERS="$(dirname "$0")/_helpers.sh"
+[ -f "$_HELPERS" ] && . "$_HELPERS" && track_compile "$EXERCISE_ID" "$SRC_DIR"
 
 echo "========================================="
 echo "  EXAM SIMULATION 2 — Results Checker"
@@ -109,5 +112,6 @@ else
 fi
 echo ""
 echo "SIMULATION LOGGED"
+    show_compile_count
 echo "Code: $HASH"
 exit 0

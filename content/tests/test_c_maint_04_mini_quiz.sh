@@ -6,6 +6,9 @@ set -e
 
 EXERCISE_ID="c_maint_04_mini_quiz"
 SRC_DIR="${1:-.}"
+# Track compilation attempts
+_HELPERS="$(dirname "$0")/_helpers.sh"
+[ -f "$_HELPERS" ] && . "$_HELPERS" && track_compile "$EXERCISE_ID" "$SRC_DIR"
 
 echo "========================================="
 echo "  MINI C QUIZ — Automated Grader"
@@ -166,6 +169,7 @@ if [ "$SCORE" -eq "$TOTAL" ]; then
     HASH=$(echo -n "${USER}-${EXERCISE_ID}-$(date +%Y%m%d)" | sha256sum | cut -c1-8)
     echo ""
     echo "ALL FUNCTIONS PASSED!"
+    show_compile_count
     echo "Code: $HASH"
     echo ""
     echo "Ready for Gate Exam."

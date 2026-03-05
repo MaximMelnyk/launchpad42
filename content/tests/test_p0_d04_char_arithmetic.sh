@@ -5,6 +5,9 @@ set -e
 
 EXERCISE_ID="p0_d04_char_arithmetic"
 SRC_DIR="${1:-.}"
+# Track compilation attempts
+_HELPERS="$(dirname "$0")/_helpers.sh"
+[ -f "$_HELPERS" ] && . "$_HELPERS" && track_compile "$EXERCISE_ID" "$SRC_DIR"
 
 echo "=== Testing: ${EXERCISE_ID} ==="
 
@@ -80,6 +83,7 @@ EXPECTED=$(printf 'HELLO WORLD 42!\nABC XYZ\nALREADY UPPER 123')
 if [ "$RESULT" == "$EXPECTED" ]; then
     HASH=$(echo -n "${USER}-${EXERCISE_ID}-$(date +%Y%m%d)" | sha256sum | cut -c1-8)
     echo "ALL TESTS PASSED"
+    show_compile_count
     echo "Code: $HASH"
     rm -f /tmp/${EXERCISE_ID}_test /tmp/${EXERCISE_ID}_main.c
     exit 0

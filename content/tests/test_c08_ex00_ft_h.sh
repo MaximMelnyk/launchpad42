@@ -5,6 +5,9 @@ set -e
 
 EXERCISE_ID="c08_ex00_ft_h"
 SRC_DIR="${1:-.}"
+# Track compilation attempts
+_HELPERS="$(dirname "$0")/_helpers.sh"
+[ -f "$_HELPERS" ] && . "$_HELPERS" && track_compile "$EXERCISE_ID" "$SRC_DIR"
 
 echo "=== Testing: ${EXERCISE_ID} ==="
 echo "(C08 ex00: ft.h — header file with function prototypes)"
@@ -234,5 +237,6 @@ rm -f /tmp/${EXERCISE_ID}_*.c /tmp/${EXERCISE_ID}_test1 /tmp/${EXERCISE_ID}_test
 HASH=$(echo -n "${USER}-${EXERCISE_ID}-$(date +%Y%m%d)" | sha256sum | cut -c1-8)
 echo ""
 echo "ALL TESTS PASSED"
+    show_compile_count
 echo "Code: $HASH"
 exit 0
