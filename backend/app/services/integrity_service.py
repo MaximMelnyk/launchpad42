@@ -44,7 +44,7 @@ async def analyze_weekly_integrity(
     Returns dict with speed_anomalies, unusual_hours, bulk_completions,
     consistently_fast flag, avg_time_ratio_pct, exercises_analyzed.
     """
-    today = reference_date or date.today()
+    today = reference_date or datetime.now(FRANCE_TZ).date()
     monday = week_start or (today - timedelta(days=today.weekday()))
 
     # Fetch all completed exercises for this user
@@ -153,7 +153,7 @@ async def get_weekly_tutor_usage(
 
     Returns {total_questions, days_used}.
     """
-    today = date.today()
+    today = datetime.now(FRANCE_TZ).date()
     monday = week_start or (today - timedelta(days=today.weekday()))
 
     total_questions = 0
