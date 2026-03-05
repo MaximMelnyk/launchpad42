@@ -676,8 +676,10 @@ async def _generate_weekly_report(uid: str, db: AsyncClient) -> str:
 
     u = user_doc.to_dict()
 
-    # Count sessions this week
-    today = date.today()
+    # Count sessions this week (France timezone for consistency)
+    from zoneinfo import ZoneInfo
+    france_tz = ZoneInfo("Europe/Paris")
+    today = datetime.now(france_tz).date()
     monday = today - timedelta(days=today.weekday())
     sessions_count = 0
     total_xp = 0

@@ -1,6 +1,6 @@
 """Tests for integrity_service — timing anomaly detection + tutor usage."""
 
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 
 import pytest
 
@@ -11,6 +11,10 @@ from app.services.integrity_service import (
     get_weekly_tutor_usage,
 )
 from tests.conftest import TEST_UID
+
+# Fixed dates for deterministic tests (CET winter, UTC+1)
+MONDAY = date(2026, 1, 5)
+FRIDAY = date(2026, 1, 9)
 
 
 @pytest.fixture
@@ -50,14 +54,8 @@ def integrity_db(mock_db, mock_exercise):
 @pytest.mark.asyncio
 async def test_speed_anomaly_flagged(integrity_db):
     """Exercise completed in <20% of estimated time is flagged."""
-    from datetime import date, timedelta
-    today = date.today()
-    monday = today - timedelta(days=today.weekday())
-    # Simulate: ft_strcpy (20 min estimate) completed in 2 min = 10%
-    completion_time = datetime(
-        monday.year, monday.month, monday.day, 10, 0,
-        tzinfo=timezone.utc,
-    )
+    # ft_strcpy (20 min estimate) completed in 2 min = 10%
+    base = datetime(2026, 1, 5, 10, 0, tzinfo=timezone.utc)
     integrity_db.seed(
         "exercise_progress",
         f"{TEST_UID}_c02_ex00_ft_strcpy",
@@ -65,12 +63,14 @@ async def test_speed_anomaly_flagged(integrity_db):
             "uid": TEST_UID,
             "exercise_id": "c02_ex00_ft_strcpy",
             "status": "completed",
-            "started_at": completion_time,
-            "completed_at": completion_time + timedelta(minutes=2),
+            "started_at": base,
+            "completed_at": base + timedelta(minutes=2),
         },
     )
 
-    result = await analyze_weekly_integrity(TEST_UID, integrity_db)
+    result = await analyze_weekly_integrity(
+        TEST_UID, integrity_db, week_start=MONDAY, reference_date=FRIDAY,
+    )
     assert len(result["speed_anomalies"]) == 1
     assert result["speed_anomalies"][0]["exercise_id"] == "c02_ex00_ft_strcpy"
     assert result["speed_anomalies"][0]["ratio_pct"] == 10
@@ -79,13 +79,7 @@ async def test_speed_anomaly_flagged(integrity_db):
 @pytest.mark.asyncio
 async def test_normal_speed_not_flagged(integrity_db):
     """Exercise completed in normal time is not flagged."""
-    from datetime import date, timedelta
-    today = date.today()
-    monday = today - timedelta(days=today.weekday())
-    completion_time = datetime(
-        monday.year, monday.month, monday.day, 10, 0,
-        tzinfo=timezone.utc,
-    )
+    base = datetime(2026, 1, 5, 10, 0, tzinfo=timezone.utc)
     integrity_db.seed(
         "exercise_progress",
         f"{TEST_UID}_c02_ex00_ft_strcpy",
@@ -93,12 +87,14 @@ async def test_normal_speed_not_flagged(integrity_db):
             "uid": TEST_UID,
             "exercise_id": "c02_ex00_ft_strcpy",
             "status": "completed",
-            "started_at": completion_time,
-            "completed_at": completion_time + timedelta(minutes=15),
+            "started_at": base,
+            "completed_at": base + timedelta(minutes=15),
         },
     )
 
-    result = await analyze_weekly_integrity(TEST_UID, integrity_db)
+    result = await analyze_weekly_integrity(
+        TEST_UID, integrity_db, week_start=MONDAY, reference_date=FRIDAY,
+    )
     assert len(result["speed_anomalies"]) == 0
 
 
@@ -107,9 +103,7 @@ async def test_normal_speed_not_flagged(integrity_db):
 @pytest.mark.asyncio
 async def test_unusual_hours_flagged(integrity_db):
     """Submissions at 3 AM (France time) are flagged."""
-    from datetime import date, timedelta
-    # Fixed winter date (CET, UTC+1): 2 AM UTC = 3 AM France
-    winter_monday = date(2026, 1, 5)  # a Monday in January
+    # CET (UTC+1): 2 AM UTC = 3 AM France
     night_time = datetime(2026, 1, 5, 2, 0, tzinfo=timezone.utc)
     integrity_db.seed(
         "exercise_progress",
@@ -124,9 +118,7 @@ async def test_unusual_hours_flagged(integrity_db):
     )
 
     result = await analyze_weekly_integrity(
-        TEST_UID, integrity_db,
-        week_start=winter_monday,
-        reference_date=date(2026, 1, 9),
+        TEST_UID, integrity_db, week_start=MONDAY, reference_date=FRIDAY,
     )
     assert len(result["unusual_hours"]) == 1
     assert result["unusual_hours"][0]["hour"] == 3
@@ -135,9 +127,7 @@ async def test_unusual_hours_flagged(integrity_db):
 @pytest.mark.asyncio
 async def test_daytime_not_flagged(integrity_db):
     """Submissions at 3 PM are not flagged as unusual."""
-    from datetime import date, timedelta
-    # Fixed winter date (CET, UTC+1): 14 UTC = 15 France
-    winter_monday = date(2026, 1, 5)
+    # CET (UTC+1): 14 UTC = 15 France
     day_time = datetime(2026, 1, 5, 14, 0, tzinfo=timezone.utc)
     integrity_db.seed(
         "exercise_progress",
@@ -152,9 +142,7 @@ async def test_daytime_not_flagged(integrity_db):
     )
 
     result = await analyze_weekly_integrity(
-        TEST_UID, integrity_db,
-        week_start=winter_monday,
-        reference_date=date(2026, 1, 9),
+        TEST_UID, integrity_db, week_start=MONDAY, reference_date=FRIDAY,
     )
     assert len(result["unusual_hours"]) == 0
 
@@ -164,12 +152,8 @@ async def test_daytime_not_flagged(integrity_db):
 @pytest.mark.asyncio
 async def test_bulk_completion_flagged(integrity_db):
     """5+ exercises in 1 hour triggers bulk flag."""
-    from datetime import date, timedelta
-    today = date.today()
-    monday = today - timedelta(days=today.weekday())
-    base = datetime(monday.year, monday.month, monday.day, 10, 0, tzinfo=timezone.utc)
+    base = datetime(2026, 1, 5, 10, 0, tzinfo=timezone.utc)
 
-    # Seed 5 exercises + completions within 1 hour
     for i in range(5):
         ex_id = f"bulk_ex_{i}"
         integrity_db.seed("exercises", ex_id, {
@@ -189,7 +173,9 @@ async def test_bulk_completion_flagged(integrity_db):
             },
         )
 
-    result = await analyze_weekly_integrity(TEST_UID, integrity_db)
+    result = await analyze_weekly_integrity(
+        TEST_UID, integrity_db, week_start=MONDAY, reference_date=FRIDAY,
+    )
     assert len(result["bulk_completions"]) == 1
     assert result["bulk_completions"][0]["count"] >= BULK_EXERCISE_COUNT
 
@@ -197,10 +183,7 @@ async def test_bulk_completion_flagged(integrity_db):
 @pytest.mark.asyncio
 async def test_no_bulk_with_spread_exercises(integrity_db):
     """4 exercises spread over 3 hours is not flagged."""
-    from datetime import date, timedelta
-    today = date.today()
-    monday = today - timedelta(days=today.weekday())
-    base = datetime(monday.year, monday.month, monday.day, 10, 0, tzinfo=timezone.utc)
+    base = datetime(2026, 1, 5, 10, 0, tzinfo=timezone.utc)
 
     for i in range(4):
         ex_id = f"spread_ex_{i}"
@@ -221,7 +204,9 @@ async def test_no_bulk_with_spread_exercises(integrity_db):
             },
         )
 
-    result = await analyze_weekly_integrity(TEST_UID, integrity_db)
+    result = await analyze_weekly_integrity(
+        TEST_UID, integrity_db, week_start=MONDAY, reference_date=FRIDAY,
+    )
     assert len(result["bulk_completions"]) == 0
 
 
@@ -230,12 +215,8 @@ async def test_no_bulk_with_spread_exercises(integrity_db):
 @pytest.mark.asyncio
 async def test_consistently_fast_flagged(integrity_db):
     """Average <30% time across 3+ exercises is flagged."""
-    from datetime import date, timedelta
-    today = date.today()
-    monday = today - timedelta(days=today.weekday())
-    base = datetime(monday.year, monday.month, monday.day, 10, 0, tzinfo=timezone.utc)
+    base = datetime(2026, 1, 5, 10, 0, tzinfo=timezone.utc)
 
-    # 3 exercises, each completed in ~20% of estimated time
     exercises = [
         ("c02_ex00_ft_strcpy", 20),
         ("c02_ex01_ft_strncpy", 25),
@@ -255,7 +236,9 @@ async def test_consistently_fast_flagged(integrity_db):
             },
         )
 
-    result = await analyze_weekly_integrity(TEST_UID, integrity_db)
+    result = await analyze_weekly_integrity(
+        TEST_UID, integrity_db, week_start=MONDAY, reference_date=FRIDAY,
+    )
     assert result["consistently_fast"] is True
     assert result["avg_time_ratio_pct"] == 20
 
@@ -263,10 +246,7 @@ async def test_consistently_fast_flagged(integrity_db):
 @pytest.mark.asyncio
 async def test_not_consistently_fast_with_normal_times(integrity_db):
     """Average >30% time is not flagged."""
-    from datetime import date, timedelta
-    today = date.today()
-    monday = today - timedelta(days=today.weekday())
-    base = datetime(monday.year, monday.month, monday.day, 10, 0, tzinfo=timezone.utc)
+    base = datetime(2026, 1, 5, 10, 0, tzinfo=timezone.utc)
 
     exercises = [
         ("c02_ex00_ft_strcpy", 20),
@@ -287,7 +267,9 @@ async def test_not_consistently_fast_with_normal_times(integrity_db):
             },
         )
 
-    result = await analyze_weekly_integrity(TEST_UID, integrity_db)
+    result = await analyze_weekly_integrity(
+        TEST_UID, integrity_db, week_start=MONDAY, reference_date=FRIDAY,
+    )
     assert result["consistently_fast"] is False
 
 
@@ -296,7 +278,9 @@ async def test_not_consistently_fast_with_normal_times(integrity_db):
 @pytest.mark.asyncio
 async def test_empty_week_no_anomalies(integrity_db):
     """No completions = no anomalies."""
-    result = await analyze_weekly_integrity(TEST_UID, integrity_db)
+    result = await analyze_weekly_integrity(
+        TEST_UID, integrity_db, week_start=MONDAY, reference_date=FRIDAY,
+    )
     assert result["speed_anomalies"] == []
     assert result["unusual_hours"] == []
     assert result["bulk_completions"] == []
@@ -309,20 +293,15 @@ async def test_empty_week_no_anomalies(integrity_db):
 @pytest.mark.asyncio
 async def test_tutor_usage_counted(integrity_db):
     """Tutor usage correctly sums daily question counts."""
-    from datetime import date, timedelta
-    today = date.today()
-    monday = today - timedelta(days=today.weekday())
-
-    # Seed 3 days of tutor usage
     for i in range(3):
-        d = monday + timedelta(days=i)
+        d = MONDAY + timedelta(days=i)
         integrity_db.seed(
             "tutor_usage",
             f"{TEST_UID}_{d.isoformat()}",
             {"uid": TEST_UID, "date": d.isoformat(), "count": 5},
         )
 
-    result = await get_weekly_tutor_usage(TEST_UID, integrity_db)
+    result = await get_weekly_tutor_usage(TEST_UID, integrity_db, week_start=MONDAY)
     assert result["total_questions"] == 15
     assert result["days_used"] == 3
 
@@ -330,7 +309,7 @@ async def test_tutor_usage_counted(integrity_db):
 @pytest.mark.asyncio
 async def test_tutor_not_used(integrity_db):
     """No tutor usage returns zeros."""
-    result = await get_weekly_tutor_usage(TEST_UID, integrity_db)
+    result = await get_weekly_tutor_usage(TEST_UID, integrity_db, week_start=MONDAY)
     assert result["total_questions"] == 0
     assert result["days_used"] == 0
 
@@ -340,13 +319,7 @@ async def test_tutor_not_used(integrity_db):
 @pytest.mark.asyncio
 async def test_previous_week_excluded(integrity_db):
     """Completions from previous week are not included."""
-    from datetime import date, timedelta
-    today = date.today()
-    monday = today - timedelta(days=today.weekday())
-    last_week = datetime(
-        monday.year, monday.month, monday.day, 10, 0,
-        tzinfo=timezone.utc,
-    ) - timedelta(days=7)
+    last_week = datetime(2025, 12, 29, 10, 0, tzinfo=timezone.utc)  # week before MONDAY
 
     integrity_db.seed(
         "exercise_progress",
@@ -360,7 +333,9 @@ async def test_previous_week_excluded(integrity_db):
         },
     )
 
-    result = await analyze_weekly_integrity(TEST_UID, integrity_db)
+    result = await analyze_weekly_integrity(
+        TEST_UID, integrity_db, week_start=MONDAY, reference_date=FRIDAY,
+    )
     assert result["exercises_analyzed"] == 0
 
 
@@ -369,10 +344,7 @@ async def test_previous_week_excluded(integrity_db):
 @pytest.mark.asyncio
 async def test_negative_duration_skipped(integrity_db):
     """Reversed timestamps (started_at > completed_at) are skipped, not flagged."""
-    from datetime import date, timedelta
-    today = date.today()
-    monday = today - timedelta(days=today.weekday())
-    base = datetime(monday.year, monday.month, monday.day, 10, 0, tzinfo=timezone.utc)
+    base = datetime(2026, 1, 5, 10, 0, tzinfo=timezone.utc)
 
     # started_at AFTER completed_at = negative duration
     integrity_db.seed(
@@ -387,7 +359,9 @@ async def test_negative_duration_skipped(integrity_db):
         },
     )
 
-    result = await analyze_weekly_integrity(TEST_UID, integrity_db)
+    result = await analyze_weekly_integrity(
+        TEST_UID, integrity_db, week_start=MONDAY, reference_date=FRIDAY,
+    )
     assert len(result["speed_anomalies"]) == 0
     assert result["avg_time_ratio_pct"] is None  # no valid ratios
 
@@ -395,10 +369,7 @@ async def test_negative_duration_skipped(integrity_db):
 @pytest.mark.asyncio
 async def test_dst_unusual_hours_cest(integrity_db):
     """During CEST (UTC+2), 3 AM UTC = 5 AM France = still unusual."""
-    from datetime import date, timedelta
-    # Use a fixed summer date in 2026 (after DST starts March 29)
-    summer_monday = date(2026, 7, 6)  # a Monday in summer
-    # 3 AM UTC = 5 AM CEST (France summer)
+    summer_monday = date(2026, 7, 6)
     night_utc = datetime(2026, 7, 6, 3, 0, tzinfo=timezone.utc)
 
     integrity_db.seed(
@@ -416,7 +387,7 @@ async def test_dst_unusual_hours_cest(integrity_db):
     result = await analyze_weekly_integrity(
         TEST_UID, integrity_db,
         week_start=summer_monday,
-        reference_date=date(2026, 7, 10),  # Friday of that week
+        reference_date=date(2026, 7, 10),
     )
     assert len(result["unusual_hours"]) == 1
     assert result["unusual_hours"][0]["hour"] == 5  # CEST, not CET
@@ -425,7 +396,6 @@ async def test_dst_unusual_hours_cest(integrity_db):
 @pytest.mark.asyncio
 async def test_dst_daytime_not_flagged_cest(integrity_db):
     """During CEST (UTC+2), 8 AM UTC = 10 AM France = normal."""
-    from datetime import date, timedelta
     summer_monday = date(2026, 7, 6)
     day_utc = datetime(2026, 7, 6, 8, 0, tzinfo=timezone.utc)
 
