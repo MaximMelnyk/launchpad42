@@ -7,7 +7,8 @@ Features:
 - Rate limit: 20 questions/day per user
 """
 
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 
 import httpx
 import structlog
@@ -28,6 +29,8 @@ REQUEST_TIMEOUT = 30.0
 HISTORY_LIMIT = 10
 
 # System prompt for the tutor
+FRANCE_TZ = ZoneInfo("Europe/Paris")
+
 SYSTEM_PROMPT = (
     "You are a Piscine 42 tutor. Answer in Ukrainian. "
     "Guide the student, do not give complete solutions. "
@@ -44,7 +47,7 @@ async def _check_rate_limit(uid: str, db: AsyncClient) -> bool:
     Uses Firestore document to track daily count.
     Returns True if under limit, False if exceeded.
     """
-    today_str = date.today().isoformat()
+    today_str = datetime.now(FRANCE_TZ).date().isoformat()
     doc_id = f"{uid}_{today_str}"
     counter_ref = db.collection("tutor_usage").document(doc_id)
     counter_doc = await counter_ref.get()
@@ -58,7 +61,7 @@ async def _check_rate_limit(uid: str, db: AsyncClient) -> bool:
 
 async def _increment_usage(uid: str, db: AsyncClient) -> int:
     """Increment daily usage counter. Returns new count."""
-    today_str = date.today().isoformat()
+    today_str = datetime.now(FRANCE_TZ).date().isoformat()
     doc_id = f"{uid}_{today_str}"
     counter_ref = db.collection("tutor_usage").document(doc_id)
     counter_doc = await counter_ref.get()
