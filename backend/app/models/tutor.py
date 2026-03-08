@@ -8,7 +8,7 @@ from app.models import CamelModel
 class TutorRequest(CamelModel):
     """Student message to AI tutor."""
 
-    message: str = Field(max_length=2000)
+    message: str = Field(min_length=1, max_length=2000)
     exercise_id: str | None = None
     code: str | None = Field(default=None, max_length=10000)
 

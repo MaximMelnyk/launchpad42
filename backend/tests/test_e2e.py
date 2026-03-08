@@ -548,7 +548,8 @@ async def test_e2e_tutor_rate_limit():
     app = _create_app(db)
 
     # Pre-seed usage counter at 20 (limit reached)
-    today_str = date.today().isoformat()
+    from zoneinfo import ZoneInfo
+    today_str = datetime.now(ZoneInfo("Europe/Paris")).date().isoformat()
     db.seed("tutor_usage", f"{TEST_UID}_{today_str}", {
         "uid": TEST_UID,
         "date": today_str,

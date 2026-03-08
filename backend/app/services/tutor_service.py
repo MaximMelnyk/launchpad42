@@ -41,13 +41,12 @@ SYSTEM_PROMPT = (
 )
 
 
-async def _check_rate_limit(uid: str, db: AsyncClient) -> bool:
+async def _check_rate_limit(uid: str, today_str: str, db: AsyncClient) -> bool:
     """Check if user is within daily question limit.
 
     Uses Firestore document to track daily count.
     Returns True if under limit, False if exceeded.
     """
-    today_str = datetime.now(FRANCE_TZ).date().isoformat()
     doc_id = f"{uid}_{today_str}"
     counter_ref = db.collection("tutor_usage").document(doc_id)
     counter_doc = await counter_ref.get()
@@ -59,9 +58,8 @@ async def _check_rate_limit(uid: str, db: AsyncClient) -> bool:
     return data.get("count", 0) < DAILY_QUESTION_LIMIT
 
 
-async def _increment_usage(uid: str, db: AsyncClient) -> int:
+async def _increment_usage(uid: str, today_str: str, db: AsyncClient) -> int:
     """Increment daily usage counter. Returns new count."""
-    today_str = datetime.now(FRANCE_TZ).date().isoformat()
     doc_id = f"{uid}_{today_str}"
     counter_ref = db.collection("tutor_usage").document(doc_id)
     counter_doc = await counter_ref.get()
@@ -191,8 +189,11 @@ async def ask_tutor(
     Rate limit: 20 questions/day per user.
     Timeout: 30s.
     """
+    # Compute today once (France TZ) to avoid TOCTOU across midnight
+    today_str = datetime.now(FRANCE_TZ).date().isoformat()
+
     # Check rate limit
-    if not await _check_rate_limit(uid, db):
+    if not await _check_rate_limit(uid, today_str, db):
         return TutorResponse(
             reply=(
                 "Ти вичерпав ліміт запитань на сьогодні "
@@ -208,6 +209,9 @@ async def ask_tutor(
             reply="Тютор тимчасово недоступний (API не налаштовано).",
             tokens_used=0,
         )
+
+    # Count usage BEFORE API call so every attempt is tracked for integrity
+    usage_count = await _increment_usage(uid, today_str, db)
 
     # Build messages with full context
     messages: list[dict[str, str]] = [{"role": "system", "content": SYSTEM_PROMPT}]
@@ -284,11 +288,9 @@ async def ask_tutor(
     # Save conversation history (original reply without usage info)
     await _save_history(uid, history, user_message, reply, db)
 
-    # Increment usage counter and append remaining info to response only
-    count = await _increment_usage(uid, db)
+    # Show remaining questions
     display_reply = reply
-
-    remaining = DAILY_QUESTION_LIMIT - count
+    remaining = DAILY_QUESTION_LIMIT - usage_count
     if remaining <= 5:
         display_reply += f"\n\n(Залишилось питань на сьогодні: {remaining})"
 
@@ -296,7 +298,7 @@ async def ask_tutor(
         "Tutor question answered",
         uid=uid,
         tokens=tokens_used,
-        daily_count=count,
+        daily_count=usage_count,
     )
 
     return TutorResponse(reply=display_reply, tokens_used=tokens_used)

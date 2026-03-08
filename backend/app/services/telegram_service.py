@@ -1,6 +1,7 @@
 """Telegram bot service — student/mother commands, webhook handling, weekly reports."""
 
-from datetime import date, datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 import structlog
 from google.cloud.firestore_v1 import AsyncClient
@@ -285,7 +286,7 @@ async def cmd_today(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await update.message.reply_text("Студент ще не зареєстрований.")
         return
 
-    today_str = date.today().isoformat()
+    today_str = datetime.now(ZoneInfo("Europe/Paris")).date().isoformat()
     session_doc = await db.collection("sessions").document(f"{uid}_{today_str}").get()
 
     if role == TelegramRole.MOTHER:
@@ -439,7 +440,7 @@ async def cmd_hint(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         return
 
     # Check current session
-    today_str = date.today().isoformat()
+    today_str = datetime.now(ZoneInfo("Europe/Paris")).date().isoformat()
     session_doc = await db.collection("sessions").document(f"{uid}_{today_str}").get()
     if not session_doc.exists:
         await update.message.reply_text("Немає активної сесії. Почни з /mood.")
@@ -602,8 +603,8 @@ async def mother_streak(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     u = user_doc.to_dict()
     weekly_days = u.get("weekly_completed_days", [])
 
-    # Count this week
-    today = date.today()
+    # Count this week (France timezone)
+    today = datetime.now(ZoneInfo("Europe/Paris")).date()
     monday = today - timedelta(days=today.weekday())
     week_count = sum(
         1 for d_str in weekly_days
@@ -770,9 +771,7 @@ async def _generate_weekly_report(uid: str, db: AsyncClient) -> str:
     u = user_doc.to_dict()
 
     # Count sessions this week (France timezone for consistency)
-    from zoneinfo import ZoneInfo
-    france_tz = ZoneInfo("Europe/Paris")
-    today = datetime.now(france_tz).date()
+    today = datetime.now(ZoneInfo("Europe/Paris")).date()
     monday = today - timedelta(days=today.weekday())
     sessions_count = 0
     total_xp = 0
@@ -871,6 +870,7 @@ async def _generate_weekly_report(uid: str, db: AsyncClient) -> str:
 
     except Exception:
         logger.exception("Failed to generate integrity report")
+        report += "\n\n--- Моніторинг ---\n(Помилка аналізу)"
 
     return report
 
